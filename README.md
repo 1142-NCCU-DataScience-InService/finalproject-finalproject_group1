@@ -63,7 +63,7 @@
 我們使用 `Streamlit` 開發了互動式的 Web App。使用者可輸入案件條件（如傷亡程度、醫療費、是否酒駕等），系統將即時呼叫訓練好的模型並試算賠償金額。
 
 ### 4.2 如何重現專案 (How to reproduce)
-1. 安裝套件：`pip install pandas numpy scikit-learn streamlit`
+1. 套件安裝：`pip install -r requirements.txt`
 2. 資料清洗：執行 `python 03_exploratory_analysis.py` 產出 `dataset_cleaned.csv`
 3. 模型訓練：執行 `python 04_model_training.py` 訓練模型並產出 `rf_model.pkl`
 4. 啟動展示：執行 `streamlit run 05_demo_app.py` 即可開啟網頁。
