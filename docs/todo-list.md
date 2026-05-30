@@ -17,8 +17,8 @@
 
 ## P0
 必須盡快完成，不然一定會被打爆或做事會很不方便
-* [] macos 路徑相容性/相對路徑問題（Eni 已在PR中提出做法, Kevin 會再整合）
-* [] 把程式碼/資料夾結構整理成老師建議的範本格式 (Kevin)
+* [x] macos 路徑相容性/相對路徑問題（Eni 已在PR中提出做法, Kevin 會再整合）
+* [x] 把程式碼/資料夾結構整理成老師建議的範本格式 (Kevin)
 * [] double check 所有程式都會動，包含資料處理、模型訓練以及UI
 * [] README/code/投影片的內容一致性
 * [] 整合/優化 UI streamlit app
@@ -43,7 +43,7 @@
 或者可以直接用 agent skill "grill-with-doc" 的 context.md
 * [] 用較近期的資料進行回測
 * [] outlier 定義和處理的改善<br>
-03_exploratory_analysis.py:47-57 移除了範圍在 10,000 到 10,000,000 之外的案例，並將費用欄位限制（caps）在 50,000,000 以內。這樣做雖然能清除明顯的錯誤，但同時也有排除極端但合法（真實存在）案例的風險。更好的做法是：從實證角度說明這些閾值的合理性，或者與基於分位數的裁剪（quantile-based trimming）、縮尾處理（Winsorization）或強健模型（robust models）進行比較
+code/03_exploratory_analysis.py:47-57 移除了範圍在 10,000 到 10,000,000 之外的案例，並將費用欄位限制（caps）在 50,000,000 以內。這樣做雖然能清除明顯的錯誤，但同時也有排除極端但合法（真實存在）案例的風險。更好的做法是：從實證角度說明這些閾值的合理性，或者與基於分位數的裁剪（quantile-based trimming）、縮尾處理（Winsorization）或強健模型（robust models）進行比較
 * [] 現在是 random train/test split，如果目標是預測未來案件，可以考慮補一個 time-based split 的討論，<br>
 例如用較早年度訓練、較新年度測試，至少放在 limitation / future work。
 * [] 預測方式/演算法模型的改善<br>
@@ -55,7 +55,7 @@
 * [] 單點預測容易讓人誤會<br>
 可以保留目前 Streamlit 的區間概念，但要說清楚那是模型參考區間，不是正式法律判斷或統計信賴區間。
 * [] 錯誤分析（Error analysis）偏單薄
-程式碼僅報告了整體的 MAE 和 $R^2$（04_model_training.py:88-97）。<br>
+程式碼僅報告了整體的 MAE 和 $R^2$（code/04_model_training.py:88-97）。<br>
 建議另外依據以下維度來衡量錯誤：
   - 傷害嚴重程度
   - 醉酒與非醉酒
@@ -72,5 +72,5 @@
 Court（法院）很可能具有指標意義，但對可能很稀疏的法院欄位直接進行獨熱編碼（One-Hot Encoding）容易導致過擬合（Overfitting）。根據樣本數的大小，將罕見的法院進行分組，或是使用考慮到目標變數的正則化編碼（Target-aware regularized encoding），可能會有更好的泛化能力。
 * [] 傷害程度的對應（Mapping）偏簡化<br>
 將「死亡=3, 重傷=2, 傷害=1, 未知=0」作為原型開發（Prototype）雖然合理，但它把法律與醫學上的嚴重程度強行壓縮成單一的序數尺度（Ordinal Scale）。此外，「未知」被當作一個有意義的低層級類別來處理，這可能並不恰當。
-* [] 目標變數轉換（Target transform）沒問題，但 03_exploratory_analysis.py 檔案混雜了探索性資料分析（EDA）與生產環境的預處理<br>
+* [] 目標變數轉換（Target transform）沒問題，但 code/03_exploratory_analysis.py 檔案混雜了探索性資料分析（EDA）與生產環境的預處理<br>
 這個腳本同時進行了列印摘要、資料清洗、特徵工程以及寫出最終訓練集。這樣做雖然方便，但會讓人很難將「驗證假設」與「生成可重複的模型輸入」這兩件事分開單獨進行驗證。

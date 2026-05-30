@@ -3,7 +3,7 @@
 """
 02_build_dataset.py
 從解壓縮後的裁判書中，篩選「車禍損害賠償」案件並擷取特徵。
-產出：car_accident_dataset.csv
+產出：data/processed/car_accident_dataset.csv
 """
 
 import os

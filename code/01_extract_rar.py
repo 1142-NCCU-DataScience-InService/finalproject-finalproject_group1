@@ -3,13 +3,13 @@
 """
 01_extract_rar.py
 裁判書開放資料解壓縮工具
-將專案內的 OPENDATA-原稿 RAR 檔解壓縮到 Extracted_OpenData
+將 data/raw/OPENDATA-原稿 下的 RAR 檔解壓縮到 data/raw/Extracted_OpenData
 可用環境變數 `SOURCE_DIR`、`DEST_DIR`、`SEVEN_ZIP` 覆寫預設位置
 
 使用方式:
-  python 01_extract_rar.py                      # 互動選單
-  python 01_extract_rar.py --years 2023-2025    # 只解壓縮特定年份
-  python 01_extract_rar.py --all                # 全部解壓縮
+  python3 code/01_extract_rar.py                      # 互動選單
+  python3 code/01_extract_rar.py --years 2023-2025   # 只解壓縮特定年份
+  python3 code/01_extract_rar.py --all               # 全部解壓縮
 """
 
 import os

@@ -166,4 +166,6 @@ cython_debug/
 
 .DS_Store
 
+data/raw/OPENDATA-原稿/
+data/raw/Extracted_OpenData/
 

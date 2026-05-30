@@ -3,6 +3,8 @@
 """
 04_model_training.py
 進行機器學習模型訓練與評估
+讀取：data/processed/dataset_cleaned.csv
+產出：models/rf_model.pkl
 對應期末專案 PPTX: 2. Modeling & 3. Results
 """
 
