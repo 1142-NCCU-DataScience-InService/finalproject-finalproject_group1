@@ -5,7 +5,7 @@
 車禍精神慰撫金預測 - 互動式展示系統
 對應期末專案 PPTX: 4. Demo (On-line visualization)
 
-使用方式：在終端機輸入 `streamlit run 05_demo_app.py`
+使用方式：在專案根目錄輸入 `streamlit run code/05_demo_app.py`
 """
 
 import streamlit as st
@@ -36,7 +36,7 @@ st.markdown("""
 """)
 
 if model is None:
-    st.error("找不到訓練好的模型檔案，請先執行 `04_model_training.py`。")
+    st.error("找不到訓練好的模型檔案，請先在專案根目錄執行 `python3 code/04_model_training.py`。")
     st.stop()
 
 # 分割兩個版面

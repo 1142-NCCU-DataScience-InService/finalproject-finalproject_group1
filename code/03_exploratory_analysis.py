@@ -3,6 +3,8 @@
 """
 03_exploratory_analysis.py
 進行資料清洗、探索性分析 (EDA) 與特徵工程
+讀取：data/processed/car_accident_dataset.csv
+產出：data/processed/dataset_cleaned.csv
 對應期末專案 PPTX: 1. Input
 """
 
