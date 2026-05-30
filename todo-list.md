@@ -19,6 +19,7 @@
 必須盡快完成，不然一定會被打爆或做事會很不方便
 * [x] macos 路徑相容性/相對路徑問題（Eni 已在PR中提出做法, Kevin 會再整合）
 * [x] 把程式碼/資料夾結構整理成老師建議的範本格式 (Kevin)
+* [x] 補充說明原始資料的定義 (Kuei)
 * [] double check 所有程式都會動，包含資料處理、模型訓練以及UI
 * [] README/code/投影片的內容一致性
 * [] 整合/優化 UI streamlit app
@@ -26,7 +27,6 @@
 * [] 準備投影片 (Steven) 
 * [] 把程式碼推到老師指定的 github repo (Kevin)
 * [] 初創專案程式碼時的 ai prompt (Kuei)
-* [] 補充說明原始資料的定義 (Kuei)
 
 ## P1
 做了比較能 defend，不然可能會被老師 challenge 到爆炸
