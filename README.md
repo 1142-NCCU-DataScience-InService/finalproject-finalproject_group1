@@ -2,7 +2,7 @@
 
 本專案為國立政治大學資料科學課程期末專題，運用機器學習技術分析司法院裁判書開放資料，建立「車禍案件精神慰撫金」的預測模型，協助實務工作者與一般民眾預估合理的賠償金額，減少訴訟資源浪費。
 
-> **本次更新重點**：補齊「原始資料說明」與完整的資料前處理管線文件，並同步說明以 `config.py` 統一管理的相對路徑與 macOS 相容性重構。目標是讓任何組員（或助教）拿到專案後，都能清楚知道「資料從哪來、如何一步步變成模型輸入、目前哪些步驟可直接重現」。
+> **目前狀態**：README 內容以目前 repo 可驗證的程式碼與資料 artifacts 為準。主要腳本位於 `code/`，路徑由 `code/config.py` 統一管理；`data/processed/dataset_cleaned.csv` 與 `models/rf_model.pkl` 已隨 repo 提供，可直接重跑建模與啟動展示。原始 RAR 與完整解壓資料未隨 repo 提供，需自行準備後才能重跑前段資料工程。
 
 ---
 
@@ -10,53 +10,62 @@
 
 ### 0.1 目前可重現狀態
 
-經實測，**後段（建模與展示）可直接重現**，**前段（解壓與資料擷取）因原始資料未隨 repo 發佈，需自行準備來源資料後才能重跑**。
+經目前 repo 檔案檢查，**後段（建模與展示）可直接重現**，**前段（解壓與資料擷取）需自行準備司法院原始資料或解壓後 JSON 後才能重跑**。
 
 | 步驟 | 腳本 | 輸入 | 產出 | 狀態 |
 | --- | --- | --- | --- | --- |
-| ① 解壓縮 | `01_extract_rar.py` | 原始 `.rar`（`SOURCE_DIR`） | 解壓後 JSON（`DEST_DIR`） | ⚠️ 需自備原始資料 |
-| ② 建立資料集 | `02_build_dataset.py` | 解壓後 JSON（`DEST_DIR`） | `car_accident_dataset.csv` + `Selected_JSON/` | ⚠️ 需先完成 ① |
-| ③ 清洗 / 特徵工程 | `03_exploratory_analysis.py` | `car_accident_dataset.csv` | `dataset_cleaned.csv` | ⚠️ 需先完成 ② |
-| ④ 模型訓練 | `04_model_training.py` | `dataset_cleaned.csv` | `rf_model.pkl` | ✅ **已實測可運作** |
-| ⑤ 互動展示 | `05_demo_app.py` | `rf_model.pkl` | Streamlit Web App | ✅ **已實測可運作** |
+| ① 解壓縮 | `code/01_extract_rar.py` | 原始 `.rar`（`SOURCE_DIR`） | 解壓後 JSON（`DEST_DIR`） | ⚠️ 需自備原始資料與 7-Zip |
+| ② 建立資料集 | `code/02_build_dataset.py` | 解壓後 JSON（`DEST_DIR`） | `data/processed/car_accident_dataset.csv` + `SELECTED_DIR/` | ⚠️ 需先完成 ①；中繼 CSV 目前未隨 repo 提供 |
+| ③ 清洗 / 特徵工程 | `code/03_exploratory_analysis.py` | `data/processed/car_accident_dataset.csv` | `data/processed/dataset_cleaned.csv` | ⚠️ 需先完成 ②；清洗後 CSV 目前已提供 |
+| ④ 模型訓練 | `code/04_model_training.py` | `data/processed/dataset_cleaned.csv` | `models/rf_model.pkl` | ✅ 可直接執行 |
+| ⑤ 互動展示 | `code/05_demo_app.py` | `models/rf_model.pkl` | Streamlit Web App | ✅ 可直接執行 |
 
-> **為什麼 ①〜③ 目前還無法重現？**
-> 司法院裁判書原始開放資料（數十 GB 的 `.rar` / JSON）**體積龐大、且應依司法院開放資料條款自行下載**，因此未隨本 repo 一併發佈。只要依 [§2 原始資料說明](#-2-原始資料說明--data-source-documentation) 取得來源檔並設定路徑，即可由 ① 重跑到 ③。
+> **為什麼 ①〜③ 不能從乾淨 clone 完整重現？**
+> 司法院裁判書原始開放資料（RAR / JSON）體積龐大，且應依司法院開放資料條款自行下載，因此完整原始資料與解壓資料未隨 repo 發佈。只要依 [§2 原始資料說明](#-2-原始資料說明--data-source-documentation) 取得來源檔並設定路徑，即可由 ① 重跑到 ③。
 >
-> 由於 ③ 的產物 `dataset_cleaned.csv` 已隨 repo 提供，**想直接驗證模型者可略過 ①〜③，直接執行 ④、⑤。**
+> 由於 ③ 的產物 `data/processed/dataset_cleaned.csv` 已隨 repo 提供，**想直接驗證模型者可略過 ①〜③，直接執行 ④、⑤。**
 
 ### 0.2 建議專案結構
 
-> 以下為依目前腳本與 `config.py` 重構後的「建議」結構；實際資料夾命名與預設路徑請以 repo 內的 **`config.py` 為準**，不一致處以 `config.py` 為主。
+> 以下為目前 repo 與 `code/config.py` 對應的結構；實際路徑預設請以 **`code/config.py` 為準**，不一致處以 `config.py` 為主。
 
 ```text
-finalproject_group1/
-├── config.py                    # 路徑統一管理（相對路徑預設、可用環境變數覆寫）
-├── requirements.txt             # 套件相依
-├── README.md
-├── 01_extract_rar.py            # ① 解壓縮（需 7-Zip）
-├── 02_build_dataset.py          # ② 篩選車禍損賠案件、正則擷取特徵
-├── 03_exploratory_analysis.py   # ③ 清洗、異常值處理、特徵工程
-├── 04_model_training.py         # ④ Random Forest 訓練與評估
-├── 05_demo_app.py               # ⑤ Streamlit 互動展示
+final-project/
+├── code/
+│   ├── config.py                    # 路徑統一管理（相對路徑預設、可用環境變數覆寫）
+│   ├── 01_extract_rar.py            # ① 解壓縮（需 7-Zip）
+│   ├── 02_build_dataset.py          # ② 篩選車禍損賠案件、正則擷取特徵
+│   ├── 03_exploratory_analysis.py   # ③ 清洗、EDA、特徵工程
+│   ├── 04_model_training.py         # ④ Random Forest 訓練與評估
+│   └── 05_demo_app.py               # ⑤ Streamlit 互動展示
 ├── data/
-│   ├── car_accident_dataset.csv # ② 產出（中繼資料）
-│   ├── dataset_cleaned.csv      # ③ 產出（模型輸入）
-│   └── Selected_JSON/           # ② 另存的「精選裁判書」JSON 子集
+│   ├── raw/
+│   │   ├── OPENDATA-原稿/              # 預設 SOURCE_DIR；原始 RAR 放置處
+│   │   ├── Extracted_OpenData/         # 預設 DEST_DIR；解壓後 JSON 放置處
+│   │   └── Selected_JSON(原始訓練資料)/ # 預設 SELECTED_DIR；命中案件 JSON 子集
+│   └── processed/
+│       ├── car_accident_dataset.csv    # ② 產出；目前未隨 repo 提供
+│       └── dataset_cleaned.csv         # ③ 產出；目前已隨 repo 提供
 ├── models/
-│   └── rf_model.pkl             # ④ 產出（含模型與特徵欄位名）
-└── （原始 RAR / 解壓後 JSON：不在 repo 內，需自行下載並以 config.py 指定位置）
+│   └── rf_model.pkl                 # ④ 產出（含模型與特徵欄位名）
+├── docs/                            # 報告、簡報與專案文件
+├── image/                           # 圖片輸出位置
+├── results/                         # 表格與預測結果輸出位置
+├── tests/                           # 測試 scaffold
+├── requirements.txt
+└── README.md
 ```
 
 ### 0.3 環境需求
 
-- **Python**：3.12（其餘版本未測）
-- **作業系統**：Windows 11 / macOS 皆可（本次已做 macOS 路徑相容性重構）
+- **Python**：Python 3.12
 - **7-Zip**：僅 ①（解壓縮）需要
-  - Windows：安裝官方 7-Zip，預設 `C:\Program Files\7-Zip\7z.exe`
-  - macOS：`brew install p7zip`，並將 `SEVEN_ZIP` 環境變數指向 `7z`（或 `7zz`）的實際路徑
-- **磁碟空間**：原始 `.rar` 解壓後約為壓縮檔的 5〜10 倍，請預留足夠空間
-- **套件**：`pip install -r requirements.txt`（主要為 `pandas`、`numpy`、`scikit-learn`、`streamlit`、`joblib`、`tqdm`）
+  - Windows：安裝官方 7-Zip，或設定 `SEVEN_ZIP`
+  - macOS / Linux：安裝 `7z` 或 `7zz`，或設定 `SEVEN_ZIP`
+- **套件**：`pip install -r requirements.txt`
+  - 目前 `requirements.txt` 列出 `pandas`、`numpy`、`scikit-learn`、`joblib`、`streamlit`、`tqdm`
+  - 版本尚未 pin 住，跨機器重現時建議記錄實際安裝版本
+- **磁碟空間**：若要解壓完整裁判書開放資料，請預留原始壓縮檔數倍以上空間
 
 ---
 
@@ -68,33 +77,36 @@ finalproject_group1/
 
 ### 1.2 資料來源 (Data Source)
 - **來源**：司法院裁判書開放資料（JSON 格式）
-- **範圍**：2023 年 01 月至 2025 年 04 月（民國 112–114 年）
-- **樣本數**：擷取「損害賠償」且包含「車禍／交通事故」之有效案件共 **7,536 筆**（清洗後保留 **7,050 筆**，詳見 §3）。
+- **資料工程預設範圍**：`code/01_extract_rar.py` 的互動選單與範例指令以 2023–2025 年 RAR 作為近三年研究範圍
+- **目前可驗證資料量**：
+  - `data/raw/Selected_JSON(原始訓練資料)/`：目前 repo 中有 **7,531** 份命中案件 JSON
+  - `data/processed/dataset_cleaned.csv`：清洗後模型資料為 **7,050** 筆、**81** 欄
+  - `Year` 欄位來自司法院 `JYEAR`，目前清洗後資料範圍為民國 **107–114** 年
 
 ---
 
 ## 🗂️ 2. 原始資料說明 (Data Source Documentation)
 
-> 本節為本次更新的補充重點，說明「原始資料長什麼樣、如何取得、如何被程式讀取」，讓 ①〜③ 的步驟可被完整重現。
+本節說明「原始資料長什麼樣、如何取得、如何被程式讀取」，讓 ①〜③ 的步驟可被重現。
 
 ### 2.1 如何取得原始資料
 
 1. 前往 **司法院資料開放平臺**：<https://opendata.judicial.gov.tw/>
 2. 下載「裁判書」開放資料的壓縮檔（依月份提供，副檔名為 `.rar`）。
-3. 將下載的 `.rar` 全部放入同一個來源資料夾，並把 `config.py` 的 `SOURCE_DIR` 指向該資料夾。
+3. 將下載的 `.rar` 放入來源資料夾，並以 `code/config.py` 或環境變數 `SOURCE_DIR` 指向該資料夾。
 
-> ⚠️ **授權與隱私**：原始裁判書屬司法院開放資料，請遵守其開放資料使用條款；資料本身可能含個資，請勿將原始檔或可識別個資的衍生資料公開上傳至 repo。本 repo 僅保留去識別化、彙整後的特徵資料表（CSV）。
+> ⚠️ **授權與隱私**：原始裁判書屬司法院開放資料，請遵守其開放資料使用條款；資料本身可能含個資，請勿將原始檔或可識別個資的衍生資料公開上傳至 repo。
 
 ### 2.2 原始 RAR 檔命名規則
 
 - 來源資料夾中的檔案為 `*.rar`，**檔名前 6 碼為西元年月 `YYYYMM`**（例如 `202401*.rar` 代表 2024 年 1 月）。
-- `01_extract_rar.py` 即以「檔名前 4 碼（西元年）」做年份過濾、以「前 6 碼（年月）」做月份分組。
-- **同一月份若有多個版本（如含更新版）**，程式只取檔名排序最大的最新版（`sorted(month_rars)[-1]`），避免重複解壓。
+- `code/01_extract_rar.py` 以「檔名前 4 碼（西元年）」做年份過濾、以「前 6 碼（年月）」做月份分組。
+- **同一月份若有多個版本**，程式只取檔名排序最大的最新版（`sorted(month_rars)[-1]`），避免重複解壓。
 
 ### 2.3 解壓後的目錄與檔案
 
 - 每個月份解壓到 `DEST_DIR/YYYYMM/` 之下（保留原壓縮檔內的子目錄結構）。
-- 解壓後每筆裁判書為一個 `.json` 檔；②（建立資料集）會以 `rglob("*.json")` 遞迴掃描每個月份資料夾。
+- 解壓後每筆裁判書為一個 `.json` 檔；②（建立資料集）會針對 `DEST_DIR` 底下的月份資料夾，以 `rglob("*.json")` 遞迴掃描 JSON。
 
 ### 2.4 裁判書 JSON 欄位結構
 
@@ -104,28 +116,27 @@ finalproject_group1/
 | --- | --- | --- |
 | `JTITLE` | 案由 | 篩選條件：必須包含「損害賠償」 |
 | `JFULL` | 裁判書全文 | 篩選車禍關鍵字、並以正則擷取各項金額／特徵 |
-| `JID` | 裁判書識別碼 | **以逗號分隔**，取第一段作為法院代碼（`JID.split(",")[0]`）；另存檔時將逗號換成底線 |
+| `JID` | 裁判書識別碼 | 取 `JID.split(",")[0]` 作為法院代碼；另存檔時將逗號換成底線 |
 | `JYEAR` | 年度 | 寫入輸出欄位 `Year` |
 
-> 註：`JID` 在本資料集為逗號分隔字串（約略對應「法院,年度,字別,案號,…」），程式僅取第一段為 `Court`。若日後司法院調整欄位格式，需同步檢查 `02_build_dataset.py` 的 `JID.split(",")` 邏輯。
+> 註：`JID` 在程式中被視為逗號分隔字串。若日後司法院調整欄位格式，需同步檢查 `code/02_build_dataset.py` 的 `JID.split(",")` 邏輯。
 
 ### 2.5 「精選裁判書」子集（Selected_JSON）
 
-- ② 在篩選出有效案件的同時，會把命中的原始 JSON **複製一份**到 `SELECTED_DIR/`（`COPY_MATCHED_FILES = True`），檔名為 `JID` 將逗號換成底線後的 `{...}.json`。
-- 這個子集（約 7,536 筆）即為本研究真正使用到的裁判書。**若已保留此子集，未來想重建 CSV，可把 `SOURCE_DIR`/掃描目錄指向它，省去重新解壓全部原始 RAR 的時間。**
+- ② 在篩選出有效案件的同時，會把命中的原始 JSON 複製一份到 `SELECTED_DIR/`（`COPY_MATCHED_FILES = True`），檔名為 `JID` 將逗號換成底線後的 `{...}.json`。
+- 目前 repo 中的 `data/raw/Selected_JSON(原始訓練資料)/` 有 **7,531** 份 JSON，可作為追溯資料來源的參考 artifact。
+- `code/02_build_dataset.py` 的預設輸入仍是 `DEST_DIR` 底下的月份資料夾；`Selected_JSON` 目前不是該腳本的預設輸入目錄。
 
 ### 2.6 路徑設定（`config.py` 與環境變數）
 
-所有主要路徑現由專案根目錄的 **`config.py` 統一管理，預設使用專案內相對路徑**（取代舊版散落於各腳本的 `F:\`、`H:\`、`e:\...` 絕對路徑），以支援 macOS 與跨機器協作。
+所有主要路徑由 **`code/config.py`** 統一管理，預設使用專案內相對路徑，並可用環境變數覆寫。
 
-若你的原始 RAR 檔、解壓輸出位置或 7-Zip 不在預設位置，可用環境變數覆寫：
-
-| 環境變數 | 意義 | 對應步驟 |
-| --- | --- | --- |
-| `SOURCE_DIR` | 原始 `.rar` 來源資料夾 | ① 輸入 |
-| `DEST_DIR` | 解壓後 JSON 的輸出資料夾 | ①→② |
-| `SELECTED_DIR` | 命中案件的 JSON 複製目的地 | ② |
-| `SEVEN_ZIP` | 7-Zip 執行檔路徑 | ① |
+| 環境變數 | 預設值 | 意義 | 對應步驟 |
+| --- | --- | --- | --- |
+| `SOURCE_DIR` | `data/raw/OPENDATA-原稿` | 原始 `.rar` 來源資料夾 | ① 輸入 |
+| `DEST_DIR` | `data/raw/Extracted_OpenData` | 解壓後 JSON 的輸出資料夾 | ①→② |
+| `SELECTED_DIR` | `data/raw/Selected_JSON(原始訓練資料)` | 命中案件的 JSON 複製目的地 | ② |
+| `SEVEN_ZIP` | PATH 中的 `7zz` 或 `7z` | 7-Zip 執行檔路徑 | ① |
 
 **設定範例：**
 
@@ -134,33 +145,31 @@ finalproject_group1/
 export SEVEN_ZIP="/opt/homebrew/bin/7z"
 export SOURCE_DIR="$HOME/judicial_opendata/rar"
 export DEST_DIR="$HOME/judicial_opendata/extracted"
-export SELECTED_DIR="./data/Selected_JSON"
+export SELECTED_DIR="./data/raw/Selected_JSON(原始訓練資料)"
 ```
 
 ```powershell
 # Windows PowerShell
-$env:SEVEN_ZIP   = "C:\Program Files\7-Zip\7z.exe"
-$env:SOURCE_DIR  = "D:\judicial_opendata\rar"
-$env:DEST_DIR    = "D:\judicial_opendata\extracted"
-$env:SELECTED_DIR= ".\data\Selected_JSON"
+$env:SEVEN_ZIP    = "C:\Program Files\7-Zip\7z.exe"
+$env:SOURCE_DIR   = "D:\judicial_opendata\rar"
+$env:DEST_DIR     = "D:\judicial_opendata\extracted"
+$env:SELECTED_DIR = ".\data\raw\Selected_JSON(原始訓練資料)"
 ```
-
-> 各變數的**實際預設值以 `config.py` 為準**；未設定環境變數時，會使用 `config.py` 內的相對路徑預設。
 
 ---
 
 ## ⚙️ 3. 資料前處理管線 (Preprocessing Pipeline)
 
-完整重現順序為 ①→②→③，最終產出模型輸入檔 `dataset_cleaned.csv`。
+完整重現順序為 ①→②→③，最終產出模型輸入檔 `data/processed/dataset_cleaned.csv`。
 
-### Step ① 解壓縮 — `01_extract_rar.py`
+### Step ① 解壓縮 — `code/01_extract_rar.py`
 
 把 `SOURCE_DIR` 內的 `.rar` 以 7-Zip 解壓到 `DEST_DIR`。
 
 ```bash
-python 01_extract_rar.py                  # 互動選單
-python 01_extract_rar.py --years 2023-2025 # 只解壓特定西元年份
-python 01_extract_rar.py --all             # 全部解壓
+python3 code/01_extract_rar.py                   # 互動選單
+python3 code/01_extract_rar.py --years 2023-2025 # 只解壓特定西元年份
+python3 code/01_extract_rar.py --all             # 全部解壓
 ```
 
 特點：
@@ -168,14 +177,14 @@ python 01_extract_rar.py --all             # 全部解壓
 - **只取最新版**：同月份多個壓縮檔只解壓檔名最大者。
 - 解壓指令採 `7z x <rar> -o<dest> -y -aoa`（自動覆寫、不互動）。
 
-### Step ② 建立資料集 — `02_build_dataset.py`
+### Step ② 建立資料集 — `code/02_build_dataset.py`
 
-遞迴掃描 `DEST_DIR` 下所有 JSON，篩選車禍損賠案件並以正則擷取特徵，輸出 `car_accident_dataset.csv`，同時把命中 JSON 複製到 `SELECTED_DIR`。
+遞迴掃描 `DEST_DIR` 下各月份資料夾中的 JSON，篩選車禍損賠案件並以正則擷取特徵，輸出 `data/processed/car_accident_dataset.csv`，同時把命中 JSON 複製到 `SELECTED_DIR`。
 
 **篩選條件（需同時成立）：**
 1. `JTITLE` 含「損害賠償」
 2. `JFULL` 含「車禍／交通事故／道路交通」任一關鍵字
-3. 能從全文擷取到「精神慰撫金」金額（抓不到者視為非主體判決而跳過）
+3. 能從全文擷取到「精神慰撫金」金額（抓不到者跳過）
 
 **擷取邏輯（皆以正則自 `JFULL` 取得）：**
 
@@ -193,14 +202,14 @@ python 01_extract_rar.py --all             # 全部解壓
 | `Year` | 年度 | `JYEAR` |
 
 ```bash
-python 02_build_dataset.py
-# → data/car_accident_dataset.csv（中繼資料）
-# → data/Selected_JSON/（精選裁判書）
+python3 code/02_build_dataset.py
+# → data/processed/car_accident_dataset.csv
+# → data/raw/Selected_JSON(原始訓練資料)/
 ```
 
-### Step ③ 清洗與特徵工程 — `03_exploratory_analysis.py`
+### Step ③ 清洗與特徵工程 — `code/03_exploratory_analysis.py`
 
-讀入 `car_accident_dataset.csv`，輸出 `dataset_cleaned.csv`。
+讀入 `data/processed/car_accident_dataset.csv`，輸出 `data/processed/dataset_cleaned.csv`。
 
 1. **缺失值**：`Medical_Fee`、`Care_Fee`、`Work_Loss` 缺值補 0（視為未請求）；`Mental_Damage` 缺值則整筆刪除。
 2. **異常值**：保留 `Mental_Damage` 介於 **10,000〜10,000,000** 元；各費用欄上限 **50,000,000** 元；`Fault_Ratio` 夾限於 0〜100。
@@ -208,8 +217,8 @@ python 02_build_dataset.py
 4. **特徵縮放**：對 `Medical_Fee`、`Care_Fee`、`Work_Loss`、`Mental_Damage` 做 `log1p`，新增 `*_log` 欄位以穩定訓練。
 
 ```bash
-python 03_exploratory_analysis.py
-# → data/dataset_cleaned.csv（最終模型輸入，7,050 筆）
+python3 code/03_exploratory_analysis.py
+# → data/processed/dataset_cleaned.csv
 ```
 
 ### 中繼資料字典 (Data Dictionary)
@@ -235,7 +244,7 @@ python 03_exploratory_analysis.py
 | 欄位 | 說明 |
 | --- | --- |
 | `Injury_Level` | `Injury` 的順序編碼（3/2/1/0） |
-| `Court_*` | `Court` 的 One-Hot 欄位（多欄） |
+| `Court_*` | `Court` 的 One-Hot 欄位（目前清洗後資料含多個法院代碼欄） |
 | `Medical_Fee_log` / `Care_Fee_log` / `Work_Loss_log` / `Mental_Damage_log` | 對數轉換後特徵 |
 
 ---
@@ -247,15 +256,16 @@ python 03_exploratory_analysis.py
 
 ### 4.2 訓練策略
 - **Train/Test Split**：80%（5,640 筆）/ 20%（1,410 筆）隨機切割。
-- **超參數**：`max_depth=10`、`min_samples_leaf=5`、`n_estimators=100` 以防止 Overfitting。
-- **防資料洩漏**：訓練特徵排除 `Verdict_Total` 與各原始金額欄，改用 `*_log` 特徵；預測目標為 `Mental_Damage_log`，輸出時以 `expm1` 還原。
+- **超參數**：`n_estimators=100`、`max_depth=10`、`min_samples_leaf=5`、`random_state=42`、`n_jobs=-1`。
+- **防資料洩漏**：訓練特徵排除 `JID`、`Year`、`Injury`、原始目標欄、原始金額欄與 `Verdict_Total`；預測目標為 `Mental_Damage_log`，輸出時以 `np.expm1` 還原。
+- **模型 artifact**：`models/rf_model.pkl` 是 `joblib` 檔，內容為 `{"model": rf, "features": X.columns.tolist()}`；目前保存 **72** 個模型輸入特徵。
 
 ### 4.3 基準模型 (Null Model)
 - **策略**：無論案件特徵為何，一律「盲猜」訓練集的精神慰撫金平均值。
-- **基準誤差**：MAE 高達 494,720 元。
+- **基準誤差**：MAE 為 **494,720 元**。
 
 ```bash
-python 04_model_training.py
+python3 code/04_model_training.py
 # → models/rf_model.pkl（含模型與特徵欄位名）
 ```
 
@@ -268,106 +278,88 @@ python 04_model_training.py
 
 ### 5.2 顯著進步
 - **Null Model MAE**：494,720 元
-- **Random Forest MAE**：304,969 元
-- **進步幅度**：較盲猜基準**顯著提升 38.4%**，R-squared 達 **0.4618**。
+- **Random Forest MAE**：304,966 元
+- **進步幅度**：較盲猜基準提升 **38.4%**
+- **R-squared**：**0.4618**（以 log 目標計算）
 
-### 5.3 特徵重要性（Top 3）
-1. `Care_Fee`（看護費用）— 39%
-2. `Injury_Level`（傷亡嚴重度）— 28%
-3. `Medical_Fee`（醫療費用）— 18%
+### 5.3 特徵重要性（Top 5）
+1. `Care_Fee_log`（看護費用對數）— 39.1%
+2. `Injury_Level`（傷亡嚴重度）— 28.9%
+3. `Medical_Fee_log`（醫療費用對數）— 18.7%
+4. `Work_Loss_log`（工作損失對數）— 8.2%
+5. `Court_CYEV`（法院 One-Hot 欄位）— 1.4%
 
-> **洞察**：被害人所需的照護與醫療支出越高，法官越容易認定其精神痛苦巨大，進而判賠更高的慰撫金。
+> **洞察**：被害人所需的照護、醫療支出與傷亡嚴重程度越高，模型越傾向預測較高的精神慰撫金；法院 One-Hot 欄位則捕捉部分地區或法院差異。
 
 ---
 
 ## 💻 6. 系統展示與重現 (Demo & Reproducibility)
 
-### 6.1 線上視覺化
+### 6.1 本機互動展示
 使用 `Streamlit` 開發互動式 Web App，可輸入案件條件（傷亡程度、醫療費、是否酒駕等），即時呼叫模型試算賠償金額。
 
-### 6.2 快速啟動（已實測可運作）
+### 6.2 快速啟動（使用目前 checked-in artifacts）
 
 ```bash
 pip install -r requirements.txt
-python 04_model_training.py          # 由 dataset_cleaned.csv 訓練，產出 rf_model.pkl
-streamlit run 05_demo_app.py         # 啟動互動展示
+python3 code/04_model_training.py
+streamlit run code/05_demo_app.py
+```
+
+若不想重新訓練，也可在 `models/rf_model.pkl` 已存在時直接啟動 App：
+
+```bash
+streamlit run code/05_demo_app.py
 ```
 
 ### 6.3 完整重現（含前處理，需自備原始資料）
 
 ```bash
-# 0) 先依 §2 取得原始 RAR、設定 config.py / 環境變數
-python 01_extract_rar.py --years 2023-2025
-python 02_build_dataset.py
-python 03_exploratory_analysis.py
-python 04_model_training.py
-streamlit run 05_demo_app.py
+# 0) 先依 §2 取得原始 RAR、設定 code/config.py / 環境變數
+python3 code/01_extract_rar.py --years 2023-2025
+python3 code/02_build_dataset.py
+python3 code/03_exploratory_analysis.py
+python3 code/04_model_training.py
+streamlit run code/05_demo_app.py
 ```
 
 ### 6.4 專案挑戰 (Challenges)
-- **非結構化資料擷取**：司法文書格式極不統一，最大挑戰在於以正則表達式從數十萬字的中文裁判書中精準提取各項賠償金額，並排除和解、調解案件。
+- **非結構化資料擷取**：司法文書格式極不統一，最大挑戰在於以正則表達式從中文裁判書中擷取各項賠償金額與案件特徵。
+- **資料洩漏風險**：`Verdict_Total` 可能包含精神慰撫金本身，因此模型訓練時必須排除。
+- **重現成本**：完整原始裁判書資料體積大，前段資料工程需要額外下載、解壓與磁碟空間。
 
 ---
 
 ## 🤖 7. 生成式 AI 協作歷程 (AI Collaboration Journey)
 
-> 本節記錄本專題「從零到一」與生成式 AI 助理協作的努力過程——我們相信，在大型語言模型逐漸成為工程標配的當下，**如何下達指令、如何分工、如何在 AI 出錯時導正方向**，與最終模型的準確度同等重要。
+本專案保留的可驗證協作成果，主要體現在目前 repo 的工作流腳本、報告與展示 artifacts。README 僅列出 repo 內可直接檢查的文件位置，不重複未由檔案佐證的 prompt 時間線。
 
-### 7.1 開發環境與時程
-
-| 項目 | 內容 |
-| --- | --- |
-| AI 助理核心 | Google DeepMind Antigravity（Agentic 程式開發助理） |
-| 作業環境 | Windows 11（PowerShell 環境） |
-| 語言與套件 | Python 3.12、scikit-learn、Streamlit 1.57.0 |
-| 資料來源 | 司法院資料開放平臺（<https://opendata.judicial.gov.tw/>） |
-| AI 協作啟動 | 2026/5/15 上午 11:37 |
-| 初步架構完成 | 2026/5/16 上午 08:03 |
-| 總花費時間 | 專案總跨距約 **20 小時**；實際下達 Prompt 與除錯的高密度作業時間僅約 **3〜4 小時** |
-
-> **前置作業**：所有原始資料皆由本組親自前往司法院開放資料平臺下載至本機（`DEST_DIR`）。由於開放資料檔案極度龐大，光是下載與環境準備就耗費了相當漫長的時間——這也呼應 §0 中「①〜③ 因原始資料未隨 repo 發佈而暫無法重現」的現況。
-
-依「精力投入比例」而非「掛機時間」來看，最耗心力的並非建模或寫網頁，而是**前期把非結構化中文裁判書轉成可用資料表**的資料工程（約佔 35%），其次為清洗與 EDA（約 25%），建模與 Demo 各約 20%。
-
-### 7.2 階段性 Prompt 與產出結果
-
-以下節錄不同階段下達給 Antigravity 的具體 Prompt（提示詞），以及 AI 反饋的程式碼與結果：
-
-| 階段（時間） | 具體 Prompt（節錄） | 產出與效益 |
+| 類型 | 目前檔案 | 說明 |
 | --- | --- | --- |
-| 啟動與架構（5/15 11:37） | 「請參考這份簡報 `topic99_finalProject.pptx`，引導我完成這個專題。」「1. 如貼圖，資料集擷取中…」 | AI 讀取期末報告 PPT，規劃出 Input → Modeling → Results → Demo 四大階段的開發藍圖。 |
-| 資料工程（5/15 下午） | 「請問會將對應的裁判書存到特定的地方嗎？」「我剛剛已經執行中了，怎麼辦？」 | AI 撰寫 `01_extract_rar.py`，並在我們反映執行中斷後，迅速加入「斷點續傳」防呆機制。 |
-| 資料集說明（5/15 晚上） | 「關於資料集，請給我一份 word 檔說明。」 | AI 不僅完成特徵工程腳本 `02_build_dataset.py`（正則擷取），還自動產出 Data Dictionary 說明文件。 |
-| 建模與展示（5/16 08:03） | 「請問有按照我們老師的 ppt 要求方向製作嗎？」「好，請繼續指導我。」 | AI 依循 PPT 建立含 Null Model 基準比較的 `04_model_training.py`，並以 Streamlit 開發出 `05_demo_app.py`。 |
-
-### 7.3 人機協作的反思與價值
-
-面對如此龐大的非結構化中文法律文件，若僅靠純人力編寫腳本，開發時間恐需數週。Antigravity 展現了極高的執行力：當 Regex 抓取金額失敗時，我們只需把報錯資訊或遺漏樣本拋給 AI，幾秒內即可拿到修正後的新版程式碼。
-
-但我們也清楚意識到 **AI 的輸出必須經過人類驗收**——它可能抓錯金額、誤納和解案件，也可能在缺乏領域提醒時忽略資料洩漏（如將 `Verdict_Total` 納入特徵），這些都得靠具法律與資料判斷力的組員把關。
-
-在這次從零到一的協作中，我們深刻體會到：工程師的角色已從「**撰寫語法的打字員**」，轉變為「**制定策略、設計架構、提供領域知識與品管測試的專案經理**」。透過精準的 Prompt 與持續的人機迭代，我們將原本需耗時數週的期末專案，壓縮在約 20 小時的跨距內落地。
-
-> 📄 完整協作歷程另見組內文件《生成式 AI 協作歷程報告（補充）》。
+| 程式工作流 | `code/01_extract_rar.py`〜`code/05_demo_app.py` | 從解壓、資料集建立、清洗、建模到 Streamlit 展示 |
+| 路徑設定 | `code/config.py` | 集中管理 raw / processed / model 路徑與環境變數覆寫 |
+| 書面報告 | `docs/report/車禍損害賠償預測_期末專題完整報告_正式版.docx` | 期末專題報告 artifact |
+| 簡報 | `docs/slides/` | 期末報告與展示簡報 |
+| 待辦紀錄 | `docs/todo-list.md` | 專案後續事項紀錄 |
 
 ---
 
 ## 🧩 8. 已知問題與待辦 (Known Issues & TODO)
 
-- [ ] 將 ①〜③ 的可重現性自動化（提供小型範例 JSON 或 `Selected_JSON` 子集，讓不下載完整原始資料者也能跑通）。
-- [ ] 補上 `requirements.txt` 的版本鎖定（pinned versions）以利跨機器一致。
-- [ ] 確認 `config.py` 各預設相對路徑與本 README §0.2 的建議結構一致。
-- [ ] 未來導入 LLM 直接理解判決抗辯與情節，突破正則表達式的極限，提升預測表現。
+- [ ] `data/processed/car_accident_dataset.csv` 目前未隨 repo 提供；若要重跑 ③，需先由 ② 重新產生。
+- [ ] 原始 RAR 與完整解壓資料未隨 repo 提供；①〜② 需自行下載司法院資料並準備足夠磁碟空間。
+- [ ] 目前沒有正式自動化測試；`tests/` 僅保留 scaffold。
+- [ ] `requirements.txt` 尚未鎖定版本；跨機器重現時可能需要補上 pinned versions。
+- [ ] 正則擷取仍可能受裁判書格式差異影響；未來可加入抽樣人工驗證或更完整的 parser 測試。
+- [ ] 未來可導入 LLM 輔助理解判決情節與抗辯內容，突破純正則表達式的限制。
 
 ---
 
 ## 👥 貢獻紀錄 (Changelog)
 
-- **PR #1（`bagel211-svg`）**：優化 macOS 執行路徑與升級 Streamlit 預測功能；相對路徑／`config.py` 重構的基礎。
-- **PR #2（`stevenwangCR`）**：新增 Final Project 檔案（資料前處理與建模等腳本）。
-- **本次更新（`juangig6` / 莊一桂）**：補充本 README 的「原始資料說明」、前處理管線文件、重現狀態、資料字典，以及「生成式 AI 協作歷程」。
+- 目前 README 已對齊 `code/` 編號工作流、`code/config.py` 路徑設定、checked-in artifacts 與目前可重算的模型指標。
+- 目前 repo 可直接使用的核心 artifacts 為 `data/processed/dataset_cleaned.csv` 與 `models/rf_model.pkl`。
+- 若未來重新產生 `data/processed/car_accident_dataset.csv`、`data/processed/dataset_cleaned.csv` 或 `models/rf_model.pkl`，請同步更新本 README 的樣本數、評估指標與特徵重要性。
 
 ---
 *本專題為國立政治大學資料科學課程期末專案（第一組）*
-
-
