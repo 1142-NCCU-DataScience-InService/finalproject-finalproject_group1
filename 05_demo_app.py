@@ -12,23 +12,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-from pathlib import Path
+
+from config import MODEL_PATH
 
 # 設定頁面資訊
 st.set_page_config(page_title="車禍精神慰撫金預測 AI", page_icon="⚖️", layout="centered")
 
-# 讀取模型與特徵
-BASE_DIR = Path(r"e:\AI_程式開發\Judge_data")
-MODEL_PATH = BASE_DIR / "models" / "rf_model.pkl"
-
 @st.cache_resource
-def load_model():
-    if not MODEL_PATH.exists():
+def load_model(model_path):
+    if not model_path.exists():
         return None, None
-    data = joblib.load(MODEL_PATH)
+    data = joblib.load(model_path)
     return data['model'], data['features']
 
-model, feature_names = load_model()
+model, feature_names = load_model(MODEL_PATH)
 
 # ==========================================
 # 介面設計

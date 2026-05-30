@@ -3,7 +3,8 @@
 """
 01_extract_rar.py
 裁判書開放資料解壓縮工具
-將 F:/OPENDATA-原稿 的 RAR 檔解壓縮到 H:/Extracted_OpenData
+將專案內的 OPENDATA-原稿 RAR 檔解壓縮到 Extracted_OpenData
+可用環境變數 `SOURCE_DIR`、`DEST_DIR`、`SEVEN_ZIP` 覆寫預設位置
 
 使用方式:
   python 01_extract_rar.py                      # 互動選單
@@ -15,14 +16,10 @@ import os
 import sys
 import subprocess
 import argparse
+import shutil
 from pathlib import Path
 
-# ─────────────────────────────────────────────
-# 設定
-# ─────────────────────────────────────────────
-SEVEN_ZIP  = r"C:\Program Files\7-Zip\7z.exe"
-SOURCE_DIR = Path(r"F:\OPENDATA-原稿")
-DEST_DIR   = Path(r"H:\Extracted_OpenData")
+from config import DEST_DIR, SEVEN_ZIP, SOURCE_DIR
 
 # ─────────────────────────────────────────────
 # 工具函式
@@ -31,7 +28,10 @@ DEST_DIR   = Path(r"H:\Extracted_OpenData")
 def check_env():
     """環境檢查"""
     ok = True
-    if not Path(SEVEN_ZIP).exists():
+    if not SEVEN_ZIP:
+        print("[ERROR] 找不到 7-Zip，請設定環境變數 SEVEN_ZIP，或安裝 7z / 7zz 到 PATH。")
+        ok = False
+    elif not shutil.which(SEVEN_ZIP) and not Path(SEVEN_ZIP).exists():
         print(f"[ERROR] 找不到 7-Zip：{SEVEN_ZIP}")
         ok = False
     if not SOURCE_DIR.exists():
@@ -155,8 +155,15 @@ def interactive_menu():
     print("=" * 55)
 
     all_rars = get_rar_list()
+    if not all_rars:
+        print("找不到任何 RAR 檔，請確認來源目錄與檔案位置是否正確。")
+        return
+
     years = sorted({r.stem[:4] for r in all_rars if r.stem[:4].isdigit()})
-    print(f"共找到 {len(all_rars)} 個 RAR 檔，年份範圍：{years[0]}～{years[-1]}\n")
+    if years:
+        print(f"共找到 {len(all_rars)} 個 RAR 檔，年份範圍：{years[0]}～{years[-1]}\n")
+    else:
+        print(f"共找到 {len(all_rars)} 個 RAR 檔。\n")
 
     print("請選擇解壓縮範圍：")
     print("  1. 僅解壓縮近3年（2023-2025，供112-114年研究用）")

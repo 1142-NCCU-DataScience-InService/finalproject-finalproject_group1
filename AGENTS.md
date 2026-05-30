@@ -28,7 +28,7 @@ python 04_model_training.py
 streamlit run 05_demo_app.py
 ```
 
-Use `python 01_extract_rar.py --years 2023-2025` only when the local archive paths and 7-Zip path are configured. Several scripts currently contain hard-coded Windows paths such as `e:\AI_程式開發\Judge_data`; update these before regenerating data on another machine.
+Use `python 01_extract_rar.py --years 2023-2025` only when the local archive paths and 7-Zip path are configured. Shared paths now live in `config.py` and default to project-relative locations; use environment overrides like `SOURCE_DIR`, `DEST_DIR`, and `SEVEN_ZIP` when data or tools live elsewhere.
 
 ## Coding Style & Naming Conventions
 
