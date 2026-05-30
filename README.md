@@ -68,6 +68,8 @@
 3. 模型訓練：執行 `python 04_model_training.py` 訓練模型並產出 `rf_model.pkl`
 4. 啟動展示：執行 `streamlit run 05_demo_app.py` 即可開啟網頁。
 
+所有主要路徑現在都由專案根目錄的 `config.py` 統一管理，預設使用專案內相對路徑。若你的原始 RAR 檔、解壓縮輸出位置或 7-Zip 不在預設位置，可用 `SOURCE_DIR`、`DEST_DIR`、`SELECTED_DIR`、`SEVEN_ZIP` 環境變數覆寫。
+
 ### 4.3 專案挑戰 (Challenges)
 - **非結構化資料擷取**：司法文書格式極不統一。最大的挑戰在於使用 Regular Expression (正則表達式) 從數十萬字的中文裁判書中，精準提取各項賠償金額並排除和解、調解案件。
 

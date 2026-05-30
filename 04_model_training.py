@@ -11,18 +11,13 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 import pandas as pd
 import numpy as np
-import os
-from pathlib import Path
 
 from sklearn.model_selection import train_test_split, KFold, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 import joblib
 
-BASE_DIR = Path(r"e:\AI_程式開發\Judge_data")
-INPUT_CSV = BASE_DIR / "dataset_cleaned.csv"
-MODEL_DIR = BASE_DIR / "models"
-MODEL_DIR.mkdir(exist_ok=True)
+from config import CLEANED_DATASET_CSV, MODEL_DIR, MODEL_PATH
 
 def main():
     print("="*50)
@@ -30,7 +25,11 @@ def main():
     print("="*50)
 
     # 1. 讀取清洗後的資料集
-    df = pd.read_csv(INPUT_CSV)
+    if not CLEANED_DATASET_CSV.exists():
+        print(f"[錯誤] 找不到清洗後的資料集: {CLEANED_DATASET_CSV}")
+        return
+
+    df = pd.read_csv(CLEANED_DATASET_CSV)
     print(f"讀取資料筆數: {len(df)}")
 
     # 2. 定義特徵 (X) 與目標變數 (y)
@@ -111,10 +110,10 @@ def main():
         print(f"{row['Feature']:>20}: {row['Importance']:.4f}")
 
     # 8. 儲存模型
-    model_path = MODEL_DIR / "rf_model.pkl"
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
     # 同時儲存模型和特徵欄位名稱，方便 Demo App 使用
-    joblib.dump({'model': rf, 'features': X.columns.tolist()}, model_path)
-    print(f"\n[成功] 模型已儲存至：{model_path}")
+    joblib.dump({'model': rf, 'features': X.columns.tolist()}, MODEL_PATH)
+    print(f"\n[成功] 模型已儲存至：{MODEL_PATH}")
     print("="*50)
 
 if __name__ == "__main__":

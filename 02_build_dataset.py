@@ -14,13 +14,14 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 import time
 
+from config import DEST_DIR, RAW_DATASET_CSV, SELECTED_DIR
+
 # ─────────────────────────────────────────────
 # 設定
 # ─────────────────────────────────────────────
-SOURCE_DIR = Path(r"H:\Extracted_OpenData")
-OUTPUT_CSV = Path(r"e:\AI_程式開發\Judge_data\car_accident_dataset.csv")
+SOURCE_DIR = DEST_DIR
+OUTPUT_CSV = RAW_DATASET_CSV
 # [新增] 存放精選裁判書 JSON 的地方
-SELECTED_DIR = Path(r"e:\AI_程式開發\Judge_data\Selected_JSON")
 COPY_MATCHED_FILES = True  # 是否要複製原始檔
 
 # 篩選條件
@@ -128,6 +129,10 @@ def process_file(jf):
 
 def main():
     print(f"開始掃描目錄：{SOURCE_DIR}")
+
+    if not SOURCE_DIR.exists():
+        print(f"[錯誤] 找不到解壓縮後的資料目錄：{SOURCE_DIR}")
+        return
     
     # 取得所有待處理月份資料夾
     month_dirs = sorted([d for d in SOURCE_DIR.iterdir() if d.is_dir()])
@@ -141,6 +146,7 @@ def main():
     if COPY_MATCHED_FILES:
         SELECTED_DIR.mkdir(parents=True, exist_ok=True)
 
+    OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_CSV, 'w', encoding='utf-8-sig', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

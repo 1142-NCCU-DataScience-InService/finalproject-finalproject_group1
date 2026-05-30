@@ -8,16 +8,15 @@
 
 import pandas as pd
 import numpy as np
-import os
-from pathlib import Path
 
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
+from config import CLEANED_DATASET_CSV, RAW_DATASET_CSV
+
 # 設定路徑
-BASE_DIR = Path(r"e:\AI_程式開發\Judge_data")
-INPUT_CSV = BASE_DIR / "car_accident_dataset.csv"
-OUTPUT_CSV = BASE_DIR / "dataset_cleaned.csv"
+INPUT_CSV = RAW_DATASET_CSV
+OUTPUT_CSV = CLEANED_DATASET_CSV
 
 def main():
     print("="*50)
@@ -91,6 +90,7 @@ def main():
     print("  -> 已完成金額特徵之對數轉換 (Log Transform)")
 
     # 7. 儲存清洗後的資料集
+    OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(OUTPUT_CSV, index=False, encoding='utf-8-sig')
     print(f"\n[成功] 清洗完成！乾淨資料已儲存至：{OUTPUT_CSV}")
     print("="*50)
