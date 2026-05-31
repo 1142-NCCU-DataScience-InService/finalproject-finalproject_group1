@@ -9,15 +9,7 @@
 """
 
 import sys
-import warnings
 sys.stdout.reconfigure(encoding='utf-8')
-
-# ! AI prompt: hyperparameter-tuning-plan as the base for hyperparameter tuning implementation
-warnings.filterwarnings(
-    "ignore",
-    message="`sklearn.utils.parallel.delayed` should be used",
-    category=UserWarning,
-)
 
 import numpy as np
 import pandas as pd
