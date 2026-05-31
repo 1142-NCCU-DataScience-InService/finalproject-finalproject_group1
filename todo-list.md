@@ -30,7 +30,7 @@
 
 ## P1
 做了比較能 defend，不然可能會被老師 challenge 到爆炸
-* [] README 提到 GridSearchCV / hyperparameter tuning，但 code 目前看起來比較像固定參數 (Kevin)<br>
+* [x] README 提到 GridSearchCV / hyperparameter tuning，但 code 目前看起來比較像固定參數 (Kevin)<br>
 需要確認是否要補回調參過程或修改說明。
 * [] Regex 規則釐清與修正（即我們在下課時的討論）<br>
 從裁判書抽資料是整個專案最大的資料品質風險，可以在報告中補充說明，甚至簡單人工抽樣檢查幾筆。

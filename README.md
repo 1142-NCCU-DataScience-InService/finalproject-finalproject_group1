@@ -256,7 +256,8 @@ python3 code/03_exploratory_analysis.py
 
 ### 4.2 訓練策略
 - **Train/Test Split**：80%（5,640 筆）/ 20%（1,410 筆）隨機切割。
-- **超參數**：`n_estimators=100`、`max_depth=10`、`min_samples_leaf=5`、`random_state=42`、`n_jobs=-1`。
+- **超參數調整**：使用 `GridSearchCV` 做 3-fold 交叉驗證，評分指標為還原真實金額後的 MAE；搜尋範圍包含 `n_estimators=[100, 200]`、`max_depth=[8, 10, None]`、`min_samples_leaf=[2, 5]`、`min_samples_split=[2, 5]`、`max_features=[0.7, 1.0]`。
+- **最佳超參數**：`n_estimators=200`、`max_depth=10`、`min_samples_leaf=2`、`min_samples_split=5`、`max_features=0.7`、`random_state=42`、`n_jobs=-1`。
 - **防資料洩漏**：訓練特徵排除 `JID`、`Year`、`Injury`、原始目標欄、原始金額欄與 `Verdict_Total`；預測目標為 `Mental_Damage_log`，輸出時以 `np.expm1` 還原。
 - **模型 artifact**：`models/rf_model.pkl` 是 `joblib` 檔，內容為 `{"model": rf, "features": X.columns.tolist()}`；目前保存 **72** 個模型輸入特徵。
 
@@ -278,15 +279,17 @@ python3 code/04_model_training.py
 
 ### 5.2 顯著進步
 - **Null Model MAE**：494,720 元
-- **Random Forest MAE**：304,966 元
-- **進步幅度**：較盲猜基準提升 **38.4%**
-- **R-squared**：**0.4618**（以 log 目標計算）
+- **固定參數 Random Forest MAE**：304,966 元；R-squared：0.4618
+- **GridSearchCV 交叉驗證 MAE**：360,725 元
+- **調參後 Random Forest MAE**：303,619 元
+- **進步幅度**：較盲猜基準提升 **38.6%**；相較固定參數 RF 的 MAE 降低 **1,348 元**
+- **R-squared**：**0.4668**（以 log 目標計算）
 
 ### 5.3 特徵重要性（Top 5）
-1. `Care_Fee_log`（看護費用對數）— 39.1%
-2. `Injury_Level`（傷亡嚴重度）— 28.9%
-3. `Medical_Fee_log`（醫療費用對數）— 18.7%
-4. `Work_Loss_log`（工作損失對數）— 8.2%
+1. `Care_Fee_log`（看護費用對數）— 33.1%
+2. `Injury_Level`（傷亡嚴重度）— 28.5%
+3. `Medical_Fee_log`（醫療費用對數）— 21.2%
+4. `Work_Loss_log`（工作損失對數）— 8.5%
 5. `Court_CYEV`（法院 One-Hot 欄位）— 1.4%
 
 > **洞察**：被害人所需的照護、醫療支出與傷亡嚴重程度越高，模型越傾向預測較高的精神慰撫金；法院 One-Hot 欄位則捕捉部分地區或法院差異。
