@@ -87,7 +87,7 @@ Use a compact `GridSearchCV` so the script finds the best parameters within an e
 - Run a Streamlit smoke test:
 
   ```bash
-  uv run streamlit run code/05_demo_app.py
+  streamlit run code/05_demo_app.py
   ```
 
   Verify the app loads the regenerated artifact and can make one prediction.
