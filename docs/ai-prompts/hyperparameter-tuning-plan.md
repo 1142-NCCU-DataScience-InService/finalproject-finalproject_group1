@@ -75,7 +75,7 @@ Use a compact `GridSearchCV` so the script finds the best parameters within an e
 - Run:
 
   ```bash
-  uv run python code/04_model_training.py
+  python3 code/04_model_training.py
   ```
 
 - Confirm runtime is roughly within the three-minute target.
