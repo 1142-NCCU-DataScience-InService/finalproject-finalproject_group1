@@ -60,7 +60,7 @@ The modeling flow trains on log-transformed monetary features (`np.log1p`) and c
 
 `models/rf_model.pkl` is a `joblib` artifact containing `{"model": rf, "features": X.columns.tolist()}`. The current checked-in model stores `72` feature names. The Streamlit app builds its input dataframe from this saved feature list, so any feature engineering change in `code/03_exploratory_analysis.py` or `code/04_model_training.py` must be reflected in `code/05_demo_app.py` and should include updated metrics in README/docs.
 
-Current training metrics from `data/processed/dataset_cleaned.csv` are: Null Model MAE `494,720`; Random Forest MAE `304,966`; R-squared `0.4618`. Current top feature importances are `Care_Fee_log`, `Injury_Level`, `Medical_Fee_log`, `Work_Loss_log`, and `Court_CYEV`. Recompute and update README/docs whenever model logic, data, or dependencies change.
+Current training metrics from `data/processed/dataset_cleaned.csv` are: Null Model MAE `494,720`; fixed-parameter Random Forest MAE `304,966` with R-squared `0.4618`; GridSearchCV CV MAE `360,725`; tuned Random Forest MAE `303,619` with R-squared `0.4668`. Current top feature importances are `Care_Fee_log`, `Injury_Level`, `Medical_Fee_log`, `Work_Loss_log`, and `Court_CYEV`. Recompute and update README/docs whenever model logic, data, or dependencies change.
 
 ## Testing Guidelines
 

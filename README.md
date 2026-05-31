@@ -343,7 +343,7 @@ streamlit run code/05_demo_app.py
 | 路徑設定 | `code/config.py` | 集中管理 raw / processed / model 路徑與環境變數覆寫 |
 | 書面報告 | `docs/report/車禍損害賠償預測_期末專題完整報告_正式版.docx` | 期末專題報告 artifact |
 | 簡報 | `docs/slides/` | 期末報告與展示簡報 |
-| 待辦紀錄 | `docs/todo-list.md` | 專案後續事項紀錄 |
+| 待辦紀錄 | `todo-list.md` | 專案後續事項紀錄 |
 
 ---
 
