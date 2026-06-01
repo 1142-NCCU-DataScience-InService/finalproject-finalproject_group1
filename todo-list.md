@@ -20,9 +20,9 @@
 * [x] macos 路徑相容性/相對路徑問題（Eni 已在PR中提出做法, Kevin 會再整合）
 * [x] 把程式碼/資料夾結構整理成老師建議的範本格式 (Kevin)
 * [x] 補充說明原始資料的定義 (Kuei)
-* [] double check 所有程式都會動，包含資料處理、模型訓練以及UI
+* [x] double check 所有程式都會動，包含資料處理、模型訓練以及UI (Eni)
 * [] README/code/投影片的內容一致性
-* [] 整合/優化 UI streamlit app
+* [x] 整合/優化 UI streamlit app (Eni)
 * [] 準備上台進行簡報
 * [] 準備投影片 (Steven) 
 * [] 把程式碼推到老師指定的 github repo (Kevin)
