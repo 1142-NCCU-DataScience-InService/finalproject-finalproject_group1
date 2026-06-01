@@ -91,7 +91,7 @@ if st.button("🚀 進行 AI 預測", use_container_width=True):
     <div style="background-color:#f0f2f6;padding:20px;border-radius:10px;text-align:center;">
         <h3 style="color:#31333F;">預估精神慰撫金</h3>
         <h1 style="color:#0068c9;font-size:48px;">NT$ {int(pred_real):,}</h1>
-        <p style="color:#888;">(模型平均絕對誤差 MAE 約為 30 萬元)</p>
+        <p style="color:#888;">(模型平均絕對誤差 MAE 約為 30.4 萬元)</p>
     </div>
     """, unsafe_allow_html=True)
     
