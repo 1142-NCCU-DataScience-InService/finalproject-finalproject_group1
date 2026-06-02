@@ -17,7 +17,9 @@ def env_path(name: str, default: Path) -> Path:
     return Path(os.getenv(name, str(default)))
 
 # Extraction paths
-def resolve_seven_zip() -> str | None:
+from typing import Optional
+
+def resolve_seven_zip() -> Optional[str]:
     env_value = os.getenv("SEVEN_ZIP")
     if env_value:
         return env_value
