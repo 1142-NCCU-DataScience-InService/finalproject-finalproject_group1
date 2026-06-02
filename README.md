@@ -183,29 +183,26 @@ python3 code/01_extract_rar.py --all             # 全部解壓
 
 **篩選條件（需同時成立）：**
 1. `JTITLE` 含「損害賠償」
-2. `JFULL` 含「車禍／交通事故／道路交通」任一關鍵字
-3. 能從全文擷取到「精神慰撫金」金額（抓不到者跳過）
+2. `JFULL` 含「車禍／交通事故／道路交通／汽車／機車／行車事故」任一關鍵字
+3. 能從判決書擷取到法院認定的精神慰撫金金額（抓不到者跳過）
 
 **擷取邏輯（皆以正則自 `JFULL` 取得）：**
 
-| 輸出欄位 | 擷取目標 | 規則摘要 |
-| --- | --- | --- |
-| `Mental_Damage` | 精神慰撫金（目標 y） | 比對「精神慰撫金／非財產上損害／慰撫金 … 元」 |
-| `Verdict_Total` | 判決給付總額 | 比對「被告應/須給付原告 … 元」「給付原告 … 元」 |
-| `Medical_Fee` | 醫療費 | 比對「醫療費(用) … 元」 |
-| `Care_Fee` | 看護費 | 比對「看護費(用) … 元」 |
-| `Work_Loss` | 工作／勞動能力損失 | 比對「(勞動能力\|工作)損失 … 元」 |
-| `Fault_Ratio` | 與有過失比例 | 比對「與有過失 … N%（或百分之 N）」，預設 0 |
-| `Injury` | 傷亡類型 | 死亡/往生/殞命/不治→「死亡」；重傷/截肢/植物人→「重傷」；其餘→「傷害」 |
-| `Drunk` | 酒駕 | 全文含 酒駕/酒後駕車/飲酒…駕 → 1，否則 0 |
-| `Court` | 法院 | `JID.split(",")[0]` |
-| `Year` | 年度 | `JYEAR` |
+| 重點 | 規則摘要 |
+| --- | --- |
+| 金額擷取範圍 | 優先從「本院得心證之理由」後，並優先取「茲將原告請求項目分述如下」等賠償項目段落。 |
+| 項目切割 | 支援 `㈠`、`一`、`1.`、`(1)`、`⑴`、`⒈` 等項次格式，降低把傷勢或過失認定段落誤判為金額項目的風險。 |
+| 金額格式 | 支援阿拉伯數字、逗號、`萬` 單位與常見中文大寫金額。 |
+| 請求額與認定額 | 多數賠償項目同時輸出原告請求額（`Claimed_*`）與法院認定額；法院認定額優先抓「准許／為當／不爭執／核屬有據」等句型，明確駁回且無准許金額時記為 0。 |
+| 特殊欄位 | 另擷取法院、年份、審級、車種、酒駕、與有過失比例、強制險扣除、律師代理、傷害程度、勞動能力喪失率、住院天數、手術次數、當事人年齡/教育/收入/性別/職業等欄位。 |
 
 ```bash
 python3 code/02_build_dataset.py
 # → data/processed/car_accident_dataset.csv
 # → data/raw/Selected_JSON(原始訓練資料)/
 ```
+
+> 目前隨 repo 提供的 `data/processed/dataset_cleaned.csv` 與 `models/rf_model.pkl` 未因這次資料擷取欄位擴充而重新產生；若重跑 ②〜④，請同步更新樣本數、欄位數、模型指標與特徵重要性。
 
 ### Step ③ 清洗與特徵工程 — `code/03_exploratory_analysis.py`
 
@@ -228,16 +225,43 @@ python3 code/03_exploratory_analysis.py
 | 欄位 | 型別 | 說明 |
 | --- | --- | --- |
 | `JID` | 字串 | 裁判書識別碼（逗號分隔） |
+| `PDF_Path` | 字串 | 由 JSON 記錄或來源檔推得的裁判書/PDF 路徑資訊 |
 | `Court` | 類別 | 法院代碼（`JID` 第一段） |
 | `Year` | 整數 | 年度（`JYEAR`） |
-| `Injury` | 類別 | 傷亡類型：死亡／重傷／傷害 |
+| `Instance` | 類別 | 審級（一審／二審） |
+| `Vehicle_Type` | 類別/文字 | 事故車種描述 |
 | `Drunk` | 0/1 | 是否酒駕 |
-| `Medical_Fee` | 數值（元） | 醫療費 |
-| `Care_Fee` | 數值（元） | 看護費 |
-| `Work_Loss` | 數值（元） | 工作／勞動能力損失 |
 | `Fault_Ratio` | 數值（%） | 與有過失比例 |
-| `Verdict_Total` | 數值（元） | 判決給付總額（**含目標值，建模時排除以防資料洩漏**） |
+| `Compulsory_Insurance_Deducted` | 數值（元） | 強制險已扣除金額 |
+| `Plaintiff_Has_Lawyer` | 0/1 | 原告是否有律師代理 |
+| `Defendant_Has_Lawyer` | 0/1 | 被告是否有律師代理 |
+| `Injury` | 類別 | 傷亡類型：死亡／重傷／傷害 |
+| `Labor_Capacity_Loss_Rate` | 數值（%） | 勞動能力喪失率 |
+| `Hospital_Days` | 數值 | 住院天數 |
+| `Surgery_Count` | 數值 | 手術次數 |
+| `Claimed_Medical_Fee` | 數值（元） | 原告請求醫療費用 |
+| `Medical_Fee` | 數值（元） | 法院認定醫療費用 |
+| `Claimed_Care_Fee` | 數值（元） | 原告請求看護費 |
+| `Care_Fee` | 數值（元） | 法院認定看護費 |
+| `Claimed_Work_Loss` | 數值（元） | 原告請求停工損失／勞動能力喪失 |
+| `Work_Loss` | 數值（元） | 法院認定停工損失／勞動能力喪失 |
+| `Claimed_Transportation_Fee` | 數值（元） | 原告請求交通費 |
+| `Transportation_Fee` | 數值（元） | 法院認定交通費 |
+| `Claimed_Funeral_Or_Support_Fee` | 數值（元） | 原告請求喪葬費／扶養費 |
+| `Funeral_Or_Support_Fee` | 數值（元） | 法院認定喪葬費／扶養費 |
+| `Plaintiff_Age` | 數值/文字 | 原告年齡 |
+| `Defendant_Age` | 數值/文字 | 被告年齡 |
+| `Plaintiff_Education` | 文字 | 原告教育程度 |
+| `Defendant_Education` | 文字 | 被告教育程度 |
+| `Plaintiff_Income` | 數值/文字 | 原告收入 |
+| `Defendant_Income` | 數值/文字 | 被告收入 |
+| `Plaintiff_Gender` | 類別 | 原告性別 |
+| `Defendant_Gender` | 類別 | 被告性別 |
+| `Plaintiff_Occupation` | 文字 | 原告職業 |
+| `Defendant_Occupation` | 文字 | 被告職業 |
+| `Claimed_Mental_Damage` | 數值（元） | 原告請求精神慰撫金 |
 | `Mental_Damage` | 數值（元） | 精神慰撫金（**預測目標 y**） |
+| `Verdict_Total` | 數值（元） | 判決給付總額（**含目標值，建模時排除以防資料洩漏**） |
 
 **`dataset_cleaned.csv`（③ 額外新增）欄位：**
 

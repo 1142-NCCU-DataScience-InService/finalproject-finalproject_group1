@@ -5,7 +5,7 @@
 This is a Python data-science project for predicting mental damages in Taiwanese traffic-accident court cases. Keep the numbered workflow under `code/` and use `code/config.py` as the shared path contract.
 
 - `code/01_extract_rar.py`: extracts Judicial Yuan RAR archives into month folders.
-- `code/02_build_dataset.py`: filters traffic-accident damages cases, extracts regex-based features, writes the raw CSV, and copies matched JSON files.
+- `code/02_build_dataset.py`: filters traffic-accident damages cases, extracts regex-based features into the raw CSV schema, and copies matched JSON files.
 - `code/03_exploratory_analysis.py`: cleans data, encodes features, creates log-transformed monetary fields, and writes `data/processed/dataset_cleaned.csv`.
 - `code/04_model_training.py`: trains/evaluates the Random Forest model and writes `models/rf_model.pkl`.
 - `code/05_demo_app.py`: Streamlit demo app using the trained model artifact.
@@ -44,7 +44,7 @@ The Streamlit app can also run directly from the checked-in `models/rf_model.pkl
 streamlit run code/05_demo_app.py
 ```
 
-Use extraction only when local archives and 7-Zip are available. Shared paths default to project-relative locations in `code/config.py`: `SOURCE_DIR=data/raw/OPENDATA-原稿`, `DEST_DIR=data/raw/Extracted_OpenData`, and `SELECTED_DIR=data/raw/Selected_JSON(原始訓練資料)`. `SEVEN_ZIP` is resolved from the environment first, then from `7zz`/`7z` on `PATH`. Override these variables when data or tools live elsewhere. For parser experiments, prefer environment overrides that point at a small temporary extracted-data subset with month subdirectories, because `code/02_build_dataset.py` iterates directories under `DEST_DIR` rather than reading loose JSON files at the root.
+Use extraction only when local archives and 7-Zip are available. Shared paths default to project-relative locations in `code/config.py`: `SOURCE_DIR=data/raw/OPENDATA-原稿`, `DEST_DIR=data/raw/Extracted_OpenData`, and `SELECTED_DIR=data/raw/Selected_JSON(原始訓練資料)`. `SEVEN_ZIP` is resolved from the environment first, then from `7zz`/`7z` on `PATH`. Override these variables when data or tools live elsewhere. For parser experiments, prefer environment overrides that point at a small temporary extracted-data subset with month subdirectories for parity with the normal workflow; `code/02_build_dataset.py` can also process a direct JSON file or loose JSON files at the source root when no month subdirectories are present.
 
 ## Coding Style & Naming Conventions
 
@@ -52,7 +52,7 @@ Use Python 3 with 4-space indentation. Keep script names numbered to preserve pi
 
 Follow the local script style: small top-level helper functions, a `main()` entry point for CLI scripts, and `if __name__ == "__main__": main()` for executable workflow files. Import paths from `config.py` instead of reconstructing project paths or committing machine-specific absolute paths. When writing CSV outputs used by the course/report workflow, keep `encoding="utf-8-sig"` for Excel compatibility.
 
-For court JSON ingestion, preserve the defensive encoding pattern (`utf-8`, `utf-8-sig`, then `cp950`) unless you have validated a narrower assumption against real files. Keep regex extraction changes conservative and document any new legal-term keyword assumptions near the pattern.
+For court JSON ingestion, preserve the defensive encoding pattern (`utf-8`, `utf-8-sig`, then legacy Traditional Chinese encodings such as `cp950`/`big5`) unless you have validated a narrower assumption against real files. Keep regex extraction changes conservative and document any new legal-term keyword assumptions near the pattern. The raw CSV emitted by `code/02_build_dataset.py` uses the English `OUTPUT_FIELDNAMES` schema, including claimed-versus-court-recognized fee pairs such as `Claimed_Medical_Fee`/`Medical_Fee`, `Claimed_Care_Fee`/`Care_Fee`, `Claimed_Work_Loss`/`Work_Loss`, and `Claimed_Mental_Damage`/`Mental_Damage`, plus related case metadata.
 
 ## Modeling & App Contracts
 
@@ -66,7 +66,7 @@ Current training metrics from `data/processed/dataset_cleaned.csv` are: Null Mod
 
 There is no formal test suite yet. Before submitting changes, run the affected pipeline step and inspect the key outputs:
 
-- Dataset-building changes: run against a small extracted-data subset, then confirm row counts, required columns, and representative parsed values. If using `SELECTED_DIR` as source material, arrange it under temporary month-like directories or adjust the script intentionally; loose JSON files directly under `DEST_DIR` are not processed by the current script.
+- Dataset-building changes: run against a small extracted-data subset, then confirm row counts, required emitted columns, and representative parsed values. If using `SELECTED_DIR` as source material, month-like directories remain the closest match to the normal workflow, but the current parser can process loose JSON files when the configured source has no subdirectories.
 - Cleaning/feature changes: run `python3 code/03_exploratory_analysis.py` and verify `data/processed/dataset_cleaned.csv` shape and expected columns.
 - Training changes: run `python3 code/04_model_training.py`, record `MAE`, `R-squared`, and feature importance changes, and confirm `models/rf_model.pkl` loads.
 - Streamlit changes: run `streamlit run code/05_demo_app.py` and perform one prediction smoke test.
