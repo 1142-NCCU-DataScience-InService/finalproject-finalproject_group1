@@ -94,7 +94,12 @@ if st.button("🚀 進行 AI 預測", use_container_width=True):
         <p style="color:#888;">(模型平均絕對誤差 MAE 約為 30.4 萬元)</p>
     </div>
     """, unsafe_allow_html=True)
-    
+
+    st.info(
+        "⚠️ 本結果為機器學習模型的**參考估計值**，並非正式法律判斷，也不是統計上的信賴區間或預測區間。"
+        "實際判決金額仍會受個案事實、證據、法院見解與法官裁量影響，請勿單獨以此數字作為訴訟或和解依據。"
+    )
+
     # 顯示雷達圖或條形圖解釋 (Feature Importance Demo)
     st.markdown("### 📊 影響本次預測的關鍵因素")
     st.markdown("- **最主要因素**：傷亡程度 (`Injury_Level`) 與 實質損害 (`Medical_Fee`, `Care_Fee`)。")
