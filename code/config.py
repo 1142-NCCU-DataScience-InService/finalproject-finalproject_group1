@@ -1,6 +1,7 @@
 import os
 import shutil
 from pathlib import Path
+from typing import Optional
 
 
 CODE_DIR = Path(__file__).resolve().parent
@@ -17,8 +18,6 @@ def env_path(name: str, default: Path) -> Path:
     return Path(os.getenv(name, str(default)))
 
 # Extraction paths
-from typing import Optional
-
 def resolve_seven_zip() -> Optional[str]:
     env_value = os.getenv("SEVEN_ZIP")
     if env_value:
@@ -35,6 +34,7 @@ CLEANED_DATASET_CSV = PROCESSED_DATA_DIR / "dataset_cleaned.csv"
 INPUT_CSV = RAW_DATASET_CSV
 OUTPUT_CSV = CLEANED_DATASET_CSV
 MODEL_PATH = MODEL_DIR / "rf_model.pkl"
+METRICS_PATH = MODEL_DIR / "metrics.json"
 
 
 
