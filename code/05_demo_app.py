@@ -554,7 +554,7 @@ with tab2:
         df_show['Drunk'] = df_show['Drunk'].map({0: '否', 1: '是'})
         df_show = df_show.rename(columns=show_cols)
         
-        st.dataframe(df_show.head(150), height=300, width="stretch")
+        st.dataframe(df_show.head(150), height=300, use_container_width=True)
         st.caption(f"💡 目前篩選條件下符合歷史案件共 {len(df_filtered):,} 筆，上方清單顯示前 150 筆。")
         
     else:
