@@ -69,12 +69,17 @@ def main():
 
     # 4. 基準模型 (Null Model)
     # 根據老師要求，我們需要一個 Null Model 供比較
-    # 策略：以訓練集的「慰撫金平均值」作為預測值
+    # 策略 A：以訓練集的「慰撫金平均值」作為預測值
     null_pred = np.full(shape=len(y_real_test), fill_value=y_real_train.mean())
     null_mae = mean_absolute_error(y_real_test, null_pred)
+    # 策略 B：以訓練集的「慰撫金中位數」作為預測值（金額右偏分布下更穩健）
+    median_pred = np.full(shape=len(y_real_test), fill_value=y_real_train.median())
+    median_mae = mean_absolute_error(y_real_test, median_pred)
     print("\n" + "-"*40)
     print(f"基準模型 (Null Model) - 盲猜平均值")
     print(f"MAE (平均絕對誤差): {null_mae:,.0f} 元")
+    print(f"基準模型 (Null Model) - 盲猜中位數")
+    print(f"MAE (平均絕對誤差): {median_mae:,.0f} 元")
     print("-"*40)
 
     # 5. 固定參數隨機森林模型 (Fixed Random Forest Baseline)

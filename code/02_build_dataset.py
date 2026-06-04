@@ -130,12 +130,23 @@ def process_file(jf):
 def main():
     print(f"開始掃描目錄：{SOURCE_DIR}")
 
-    if not SOURCE_DIR.exists():
-        print(f"[錯誤] 找不到解壓縮後的資料目錄：{SOURCE_DIR}")
-        return
-    
     # 取得所有待處理月份資料夾
-    month_dirs = sorted([d for d in SOURCE_DIR.iterdir() if d.is_dir()])
+    month_dirs = sorted([d for d in SOURCE_DIR.iterdir() if d.is_dir()]) if SOURCE_DIR.exists() else []
+    
+    fallback_mode = False
+    selected_jsons = []
+    if not month_dirs:
+        if SELECTED_DIR.exists():
+            selected_jsons = list(SELECTED_DIR.glob("*.json"))
+            if selected_jsons:
+                print(f"[提示] 未發現解壓縮月份目錄，啟用 Fallback 模式：直接從精選資料夾 {SELECTED_DIR} 讀取 {len(selected_jsons)} 筆 JSON。")
+                fallback_mode = True
+            else:
+                print(f"[錯誤] 找不到解壓縮後的資料目錄 {SOURCE_DIR}，且精選資料夾 {SELECTED_DIR} 亦無 JSON 檔案。")
+                return
+        else:
+            print(f"[錯誤] 找不到解壓縮後的資料目錄 {SOURCE_DIR}，且精選資料夾 {SELECTED_DIR} 不存在。")
+            return
     
     fieldnames = [
         "JID", "Court", "Year", "Injury", "Drunk", 
@@ -143,7 +154,7 @@ def main():
         "Fault_Ratio", "Verdict_Total", "Mental_Damage"
     ]
 
-    if COPY_MATCHED_FILES:
+    if COPY_MATCHED_FILES and not fallback_mode:
         SELECTED_DIR.mkdir(parents=True, exist_ok=True)
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
@@ -154,30 +165,42 @@ def main():
         total_found = 0
         import shutil
         
-        for m_dir in month_dirs:
-            print(f"正在處理：{m_dir.name}...", end="", flush=True)
-            
-            json_files = list(m_dir.rglob("*.json"))
+        if fallback_mode:
+            print("正在處理精選 JSON 檔案...", end="", flush=True)
             count = 0
-            
-            for jf in json_files:
+            for jf in selected_jsons:
                 res = process_file(jf)
                 if res:
                     writer.writerow(res)
                     count += 1
-                    
-                    # [新增] 複製檔案邏輯
-                    if COPY_MATCHED_FILES:
-                        # 檔名格式：法院_年度_字號_編號.json
-                        # JID 格式通常是 "法院,案由,年度,字號,編號"
-                        safe_jid = res["JID"].replace(",", "_")
-                        target_path = SELECTED_DIR / f"{safe_jid}.json"
-                        if not target_path.exists():
-                            shutil.copy2(jf, target_path)
-            
-            total_found += count
-            print(f" 找到 {count} 筆。")
-            csvfile.flush() 
+            total_found = count
+            print(f" 成功讀取並匯出 {count} 筆。")
+            csvfile.flush()
+        else:
+            for m_dir in month_dirs:
+                print(f"正在處理：{m_dir.name}...", end="", flush=True)
+                
+                json_files = list(m_dir.rglob("*.json"))
+                count = 0
+                
+                for jf in json_files:
+                    res = process_file(jf)
+                    if res:
+                        writer.writerow(res)
+                        count += 1
+                        
+                        # [新增] 複製檔案邏輯
+                        if COPY_MATCHED_FILES:
+                            # 檔名格式：法院_年度_字號_編號.json
+                            # JID 格式通常是 "法院,案由,年度,字號,編號"
+                            safe_jid = res["JID"].replace(",", "_")
+                            target_path = SELECTED_DIR / f"{safe_jid}.json"
+                            if not target_path.exists():
+                                shutil.copy2(jf, target_path)
+                
+                total_found += count
+                print(f" 找到 {count} 筆。")
+                csvfile.flush() 
 
     print(f"\n完成！共擷取 {total_found} 筆有效案件，儲存至：{OUTPUT_CSV}")
 
