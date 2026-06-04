@@ -1,0 +1,8 @@
+{
+  "dataset_size": 7050,
+  "null_mae_mean": 494720.2575044012,
+  "null_mae_median": 399849.58226950356,
+  "tuned_rf_mae": 303618.8518660965,
+  "tuned_rf_r2": 0.4668139305123973,
+  "improvement_pct_vs_null_mean": 38.6
+}

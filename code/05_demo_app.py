@@ -13,8 +13,9 @@ import pandas as pd
 import numpy as np
 import joblib
 import altair as alt
+import json
 
-from config import MODEL_PATH, CLEANED_DATASET_CSV
+from config import MODEL_PATH, CLEANED_DATASET_CSV, METRICS_PATH
 
 # 頁面基本設定
 st.set_page_config(
@@ -113,8 +114,16 @@ def load_dataset(cleaned_csv_path):
         return None
     return pd.read_csv(cleaned_csv_path)
 
+@st.cache_data
+def load_metrics(metrics_path):
+    if not metrics_path.exists():
+        return None
+    with open(metrics_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 model, feature_names = load_model_data(MODEL_PATH)
 df_cleaned = load_dataset(CLEANED_DATASET_CSV)
+metrics = load_metrics(METRICS_PATH)
 
 # ─────────────────────────────────────────────
 # 自訂 CSS 樣式優化 (Aesthetic Enhancement)
@@ -181,14 +190,21 @@ with st.sidebar:
     st.image("https://img.icons8.com/color/144/scales.png", width=70)
     st.markdown("<h2 class='gradient-text'>車禍賠償預測系統</h2>", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown("""
-    **📊 模型效能指標**
+    if metrics is not None:
+        median_line = (
+            f"\n    - **補充基準**：以中位數為 Null Model 之穩健 baseline (MAE 約 {metrics['null_mae_median']/10000:.1f} 萬元)"
+            if metrics.get("null_mae_median") is not None else ""
+        )
+        st.markdown(f"""
+    **📊 模型效能指標**（自動讀取自 `models/metrics.json`）
     - **模型演算法**：隨機森林 (Random Forest)
-    - **訓練資料量**：7,050 筆實際判決
-    - **平均絕對誤差 (MAE)**：約 30.5 萬元
-    - **決定係數 ($R^2$)**：0.4618
-    - **效能提升**：比盲猜平均值提升 **38.4%**
-    """)
+    - **訓練資料量**：{metrics['dataset_size']:,} 筆實際判決
+    - **平均絕對誤差 (MAE)**：約 {metrics['tuned_rf_mae']/10000:.1f} 萬元
+    - **決定係數 ($R^2$)**：{metrics['tuned_rf_r2']:.4f}
+    - **效能提升**：比盲猜平均值（Null Model）提升 **{metrics['improvement_pct_vs_null_mean']}%**{median_line}
+        """)
+    else:
+        st.warning("尚未產生 `models/metrics.json`，請執行 `python code/04_model_training.py` 以產生最新指標。")
     st.markdown("---")
     st.caption("ℹ️ 本系統僅供學術研究與初步賠償金額估計參考，實際判決結果仍以法院心證為準。")
 
@@ -314,31 +330,28 @@ with tab1:
         with st.spinner("🧠 AI 模型深度運算中..."):
             pred_log = model.predict(input_data)[0]
             pred_real = np.expm1(pred_log)
-            
-        # 4. 計算過失相抵後的金額
-        net_pred_real = pred_real * (1 - fault_ratio / 100)
-        
-        # 5. 呈現預測結果卡片 (Highlight Display)
+
+        # 模型訓練時 Fault_Ratio 已是 X 的特徵，pred_real 已內含過失影響；不再額外乘 (1 - fault/100) 避免重複計算。
+
+        # 4. 呈現預測結果卡片 (Highlight Display)
         st.markdown("<h4 style='margin-bottom:10px;'>🔮 預估分析結果</h4>", unsafe_allow_html=True)
-        col_res1, col_res2 = st.columns(2)
-        
-        with col_res1:
-            st.markdown(f"""
-            <div class="metric-card" style="text-align: center;">
-                <p style="color: #64748b; font-weight: 500; font-size: 1.1rem; margin-bottom: 5px;">🤖 法官心證估算：精神慰撫金金額</p>
-                <div class="secondary-value">NT$ {int(pred_real):,} 元</div>
-                <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">(尚未扣除原告過失比例)</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col_res2:
-            st.markdown(f"""
-            <div class="highlight-card">
-                <p style="color: #15803d; font-weight: 600; font-size: 1.2rem; margin-bottom: 5px;">💰 過失相抵扣除後：原告實得賠償額</p>
-                <div class="highlight-value">NT$ {int(net_pred_real):,} 元</div>
-                <p style="color: #166534; font-size: 0.95rem; margin-top: 5px;">原告過失比例：<b>{fault_ratio}%</b>（應負擔自己過失責任）</p>
-            </div>
-            """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="highlight-card">
+            <p style="color: #15803d; font-weight: 600; font-size: 1.2rem; margin-bottom: 5px;">🤖 AI 模型預估：精神慰撫金金額</p>
+            <div class="highlight-value">NT$ {int(pred_real):,} 元</div>
+            <p style="color: #166534; font-size: 0.95rem; margin-top: 5px;">已含模型對原告過失比例 <b>{fault_ratio}%</b> 的學習效應</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.expander("📐 補充：依民法第 217 條再做一次簡易過失相抵試算（僅供對照）"):
+            naive_net = pred_real * (1 - fault_ratio / 100)
+            st.markdown(
+                f"若直接以模型預估金額 NT$ {int(pred_real):,} 元 × (1 − {fault_ratio}%) 試算，"
+                f"得約 **NT$ {int(naive_net):,} 元**。\n\n"
+                "⚠️ 此為 UI 端的額外算式，非模型輸出。模型本身已將 `Fault_Ratio` 作為輸入特徵，"
+                "預估值已隱含過失比例之影響，重複扣除會低估金額，請謹慎解讀。"
+            )
 
         st.info(
             "⚠️ 本結果為機器學習模型的**參考估計值**，並非正式法律判斷，也不是統計上的信賴區間或預測區間。"
@@ -405,7 +418,7 @@ with tab1:
 # TAB 2: 歷史資料統計與模型分析
 # ==============================================================================
 with tab2:
-    st.markdown("### 📈 司法院開放資料統計看板 (共 7,050 筆案件)")
+    st.markdown(f"### 📈 司法院開放資料統計看板 (共 {len(df_cleaned) if df_cleaned is not None else 0:,} 筆案件)")
     
     if df_cleaned is not None:
         # 1. 頂部 KPI 卡片
