@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 import joblib
 import altair as alt
-from pathlib import Path
 
 from config import MODEL_PATH, CLEANED_DATASET_CSV
 
