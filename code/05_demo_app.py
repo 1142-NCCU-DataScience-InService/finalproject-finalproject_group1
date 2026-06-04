@@ -289,7 +289,7 @@ with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
     
     # 點擊預測按鈕
-    if st.button("🚀 進行 AI 慰撫金估算", width="stretch"):
+    if st.button("🚀 進行 AI 慰撫金估算", use_container_width=True):
         # 1. 建立空輸入 DataFrame
         input_data = pd.DataFrame(0, index=[0], columns=feature_names)
         
