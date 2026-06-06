@@ -44,6 +44,13 @@ except Exception:  # pragma: no cover - 方便單檔測試
     CONFIG_RAW_DATASET_CSV = None
     CONFIG_SELECTED_DIR = None
 
+try:
+    # 可選：若 config.py 有定義 OUTPUT_COLUMNS，會覆蓋本檔的預設輸出欄位。
+    # 範例：OUTPUT_COLUMNS = ["JID", "PDF_Path", "Court", "Mental_Damage"]
+    from config import OUTPUT_COLUMNS as CONFIG_OUTPUT_COLUMNS
+except Exception:  # pragma: no cover - 方便單檔測試
+    CONFIG_OUTPUT_COLUMNS = None
+
 # ─────────────────────────────────────────────
 # 預設設定
 # ─────────────────────────────────────────────
@@ -150,6 +157,54 @@ OUTPUT_FIELD_SPECS = [
 OUTPUT_FIELDNAMES = [english for english, _chinese in OUTPUT_FIELD_SPECS]
 EN_TO_CN_FIELD = dict(OUTPUT_FIELD_SPECS)
 CN_TO_EN_FIELD = {chinese.split("；", 1)[0]: english for english, chinese in OUTPUT_FIELD_SPECS}
+
+# 預設輸出欄位：對齊舊版 CSV 進入 03_exploratory_analysis.py 前需要的原始欄位。
+# 說明：dataset_cleaned.csv 裡的 Injury_Level、Court_xxx、*_log 是 03_exploratory_analysis.py
+# 後續產生的欄位，不應由 02_build_dataset_f.py 直接輸出。
+# 若要輸出全部 02 可擷取欄位，可在 config.py 設 OUTPUT_COLUMNS = "ALL"。
+DEFAULT_OUTPUT_COLUMNS = [
+    "JID",
+    "Court",
+    "Year",
+    "Injury",
+    "Drunk",
+    "Medical_Fee",
+    "Care_Fee",
+    "Work_Loss",
+    "Fault_Ratio",
+    "Verdict_Total",
+    "Mental_Damage",
+]
+
+# 要輸出全部欄位時，可改成：
+# SELECTED_OUTPUT_COLUMNS = "ALL"
+# 要自訂欄位時，可改成：
+# SELECTED_OUTPUT_COLUMNS = ["JID", "Court", "Injury", "Mental_Damage"]
+# 若 config.py 有 OUTPUT_COLUMNS，會優先使用 config.py 的設定。
+SELECTED_OUTPUT_COLUMNS = CONFIG_OUTPUT_COLUMNS if CONFIG_OUTPUT_COLUMNS is not None else DEFAULT_OUTPUT_COLUMNS
+
+def resolve_output_columns(selected_columns: object) -> List[str]:
+    """解析並檢查輸出欄位設定，避免拼錯欄位名造成靜默輸出錯誤。"""
+    if selected_columns is None:
+        selected = DEFAULT_OUTPUT_COLUMNS
+    elif isinstance(selected_columns, str):
+        if selected_columns.upper() == "ALL":
+            return OUTPUT_FIELDNAMES.copy()
+        selected = [x.strip() for x in selected_columns.split(",") if x.strip()]
+    else:
+        selected = list(selected_columns)
+
+    unknown = [col for col in selected if col not in OUTPUT_FIELDNAMES]
+    if unknown:
+        valid = ", ".join(OUTPUT_FIELDNAMES)
+        raise ValueError(f"未知的輸出欄位：{unknown}。可用欄位：{valid}")
+
+    # 保留使用者指定順序，並去除重複欄位。
+    deduped: List[str] = []
+    for col in selected:
+        if col not in deduped:
+            deduped.append(col)
+    return deduped
 
 def to_english_output_row(row: Dict[str, object]) -> Dict[str, object]:
     """將內部中文欄位列轉成英文欄位列；中文欄位名請見 OUTPUT_FIELD_SPECS 註解。"""
@@ -2644,7 +2699,9 @@ def iter_input_groups(source: Path) -> Iterable[Tuple[str, List[Path]]]:
 
 
 def main() -> None:
+    output_columns = resolve_output_columns(SELECTED_OUTPUT_COLUMNS)
     print(f"開始掃描目錄：{SOURCE_DIR}")
+    print(f"輸出欄位：{', '.join(output_columns)}")
 
     if not SOURCE_DIR.exists():
         print(f"[錯誤] 找不到解壓縮後的資料目錄：{SOURCE_DIR}")
@@ -2658,7 +2715,7 @@ def main() -> None:
     total_scanned = 0
 
     with open(OUTPUT_CSV, "w", encoding="utf-8-sig", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=OUTPUT_FIELDNAMES, extrasaction="ignore")
+        writer = csv.DictWriter(csvfile, fieldnames=output_columns, extrasaction="ignore")
         writer.writeheader()
 
         for group_name, json_files in iter_input_groups(SOURCE_DIR):
