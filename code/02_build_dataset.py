@@ -2747,7 +2747,7 @@ def main() -> None:
         print(f"[錯誤] 找不到解壓縮後的資料目錄：{SOURCE_DIR}")
         return
 
-    if COPY_MATCHED_FILES:
+    if COPY_MATCHED_FILES and not fallback_mode:
         SELECTED_DIR.mkdir(parents=True, exist_ok=True)
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)

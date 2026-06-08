@@ -3,4 +3,6 @@ numpy
 scikit-learn
 joblib
 streamlit
+altair
+plotly
 tqdm

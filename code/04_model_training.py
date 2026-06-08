@@ -11,6 +11,8 @@
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
+import json
+
 import numpy as np
 import pandas as pd
 
@@ -19,7 +21,7 @@ from sklearn.metrics import make_scorer, mean_absolute_error, r2_score
 from sklearn.model_selection import GridSearchCV, train_test_split
 import joblib
 
-from config import CLEANED_DATASET_CSV, MODEL_DIR, MODEL_PATH
+from config import CLEANED_DATASET_CSV, MODEL_DIR, MODEL_PATH, METRICS_PATH
 
 
 def real_money_mae_from_log(y_true_log, y_pred_log):
@@ -69,12 +71,17 @@ def main():
 
     # 4. 基準模型 (Null Model)
     # 根據老師要求，我們需要一個 Null Model 供比較
-    # 策略：以訓練集的「慰撫金平均值」作為預測值
+    # 策略 A：以訓練集的「慰撫金平均值」作為預測值
     null_pred = np.full(shape=len(y_real_test), fill_value=y_real_train.mean())
     null_mae = mean_absolute_error(y_real_test, null_pred)
+    # 策略 B：以訓練集的「慰撫金中位數」作為預測值（金額右偏分布下更穩健）
+    median_pred = np.full(shape=len(y_real_test), fill_value=y_real_train.median())
+    median_mae = mean_absolute_error(y_real_test, median_pred)
     print("\n" + "-"*40)
     print(f"基準模型 (Null Model) - 盲猜平均值")
     print(f"MAE (平均絕對誤差): {null_mae:,.0f} 元")
+    print(f"基準模型 (Null Model) - 盲猜中位數")
+    print(f"MAE (平均絕對誤差): {median_mae:,.0f} 元")
     print("-"*40)
 
     # 5. 固定參數隨機森林模型 (Fixed Random Forest Baseline)
@@ -169,6 +176,19 @@ def main():
     # 同時儲存模型和特徵欄位名稱，方便 Demo App 使用
     joblib.dump({'model': rf, 'features': X.columns.tolist()}, MODEL_PATH)
     print(f"\n[成功] 模型已儲存至：{MODEL_PATH}")
+
+    # 10. 寫出 metrics.json 給 UI / 簡報引用，避免文件數字漂移
+    metrics = {
+        "dataset_size": int(len(df)),
+        "null_mae_mean": float(null_mae),
+        "null_mae_median": float(median_mae),
+        "tuned_rf_mae": float(rf_mae),
+        "tuned_rf_r2": float(rf_r2),
+        "improvement_pct_vs_null_mean": round(float(improvement), 1),
+    }
+    with open(METRICS_PATH, "w", encoding="utf-8") as f:
+        json.dump(metrics, f, ensure_ascii=False, indent=2)
+    print(f"[成功] 模型指標已寫入：{METRICS_PATH}")
     print("="*50)
 
 if __name__ == "__main__":
