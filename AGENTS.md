@@ -11,7 +11,7 @@ This is a Python data-science project for predicting mental damages in Taiwanese
 - `code/05_demo_app.py`: Streamlit demo app using the trained model artifact.
 - `tests/`: currently holds test scaffolding only; `tests/conftest.py` adds `code/` to `sys.path`.
 
-Raw data defaults live under `data/raw/`: original archives in `OPENDATA-原稿/`, extracted files in `Extracted_OpenData/`, and matched case JSON in `Selected_JSON(原始訓練資料)/`. The current repo includes the selected JSON subset (`7,531` files), `data/processed/dataset_cleaned.csv` (`7,050` rows, `81` columns), and `models/rf_model.pkl`; it does **not** include `data/processed/car_accident_dataset.csv`, `data/raw/OPENDATA-原稿/`, or `data/raw/Extracted_OpenData/`. Model artifacts live in `models/`; reports, slides, images, and other outputs live under `docs/`, `image/`, and `results/`.
+Raw data defaults live under `data/raw/`: original archives in `OPENDATA-原稿/`, extracted files in `Extracted_OpenData/`, and matched case JSON in `Selected_JSON(原始訓練資料)/`. The current repo includes the selected JSON subset (`7,531` files), `data/processed/dataset_cleaned.csv` (`5,143` rows, `78` columns), and `models/rf_model.pkl`; it does **not** include `data/processed/car_accident_dataset.csv`, `data/raw/OPENDATA-原稿/`, or `data/raw/Extracted_OpenData/`. Model artifacts live in `models/`; reports, slides, images, and other outputs live under `docs/`, `image/`, and `results/`.
 
 ## Build, Test, and Development Commands
 
@@ -58,9 +58,9 @@ For court JSON ingestion, preserve the defensive encoding pattern (`utf-8`, `utf
 
 The modeling flow trains on log-transformed monetary features (`np.log1p`) and converts predictions back with `np.expm1`. Preserve the leakage guardrails in `code/04_model_training.py`: do not train on identifiers, raw target columns, or `Verdict_Total`, which can include the target amount. Keep `random_state=42` for reproducible train/test splits and model comparisons unless the change explicitly studies randomness.
 
-`models/rf_model.pkl` is a `joblib` artifact containing `{"model": rf, "features": X.columns.tolist()}`. The current checked-in model stores `72` feature names. The Streamlit app builds its input dataframe from this saved feature list, so any feature engineering change in `code/03_exploratory_analysis.py` or `code/04_model_training.py` must be reflected in `code/05_demo_app.py` and should include updated metrics in README/docs.
+`models/rf_model.pkl` is a `joblib` artifact containing `{"model": rf, "features": X.columns.tolist()}`. The current checked-in model stores `69` feature names. The Streamlit app builds its input dataframe from this saved feature list, so any feature engineering change in `code/03_exploratory_analysis.py` or `code/04_model_training.py` must be reflected in `code/05_demo_app.py` and should include updated metrics in README/docs.
 
-Current training metrics from `data/processed/dataset_cleaned.csv` are: Null Model MAE `494,720`; fixed-parameter Random Forest MAE `304,966` with R-squared `0.4618`; GridSearchCV CV MAE `360,725`; tuned Random Forest MAE `303,619` with R-squared `0.4668`. Current top feature importances are `Care_Fee_log`, `Injury_Level`, `Medical_Fee_log`, `Work_Loss_log`, and `Court_CYEV`. Recompute and update README/docs whenever model logic, data, or dependencies change.
+Current training metrics from `data/processed/dataset_cleaned.csv` are: Null Model MAE `393,888`; fixed-parameter Random Forest MAE `249,295` with R-squared `0.4468`; GridSearchCV CV MAE `260,658`; tuned Random Forest MAE `244,958` with R-squared `0.4478`. Current top feature importances are `Injury_Level`, `Care_Fee_log`, `Medical_Fee_log`, `Work_Loss_log`, and `Court_CYEV`. Recompute and update README/docs whenever model logic, data, or dependencies change.
 
 ## Testing Guidelines
 

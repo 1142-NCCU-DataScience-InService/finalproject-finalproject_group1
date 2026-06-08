@@ -80,7 +80,7 @@ final-project/
 - **資料工程預設範圍**：`code/01_extract_rar.py` 的互動選單與範例指令以 2023–2025 年 RAR 作為近三年研究範圍
 - **目前可驗證資料量**：
   - `data/raw/Selected_JSON(原始訓練資料)/`：目前 repo 中有 **7,531** 份命中案件 JSON
-  - `data/processed/dataset_cleaned.csv`：清洗後模型資料為 **5,143** 筆、**45** 欄
+  - `data/processed/dataset_cleaned.csv`：清洗後模型資料為 **5,143** 筆、**78** 欄
   - `Year` 欄位來自司法院 `JYEAR`，目前清洗後資料範圍為民國 **107–114** 年
 
 ---
@@ -310,9 +310,9 @@ python3 code/03_exploratory_analysis.py
 ### 4.2 訓練策略
 - **Train/Test Split**：80%（4,114 筆）/ 20%（1,029 筆）隨機切割。
 - **超參數調整**：使用 `GridSearchCV` 做 3-fold 交叉驗證，評分指標為還原真實金額後的 MAE；搜尋範圍包含 `n_estimators=[100, 200]`、`max_depth=[8, 10, None]`、`min_samples_leaf=[2, 5]`、`min_samples_split=[2, 5]`、`max_features=[0.7, 1.0]`。
-- **最佳超參數**：`n_estimators=100`、`max_depth=10`、`min_samples_leaf=2`、`min_samples_split=2`、`max_features=0.7`、`random_state=42`、`n_jobs=-1`。
+- **最佳超參數**：`n_estimators=200`、`max_depth=8`、`min_samples_leaf=2`、`min_samples_split=5`、`max_features=0.7`、`random_state=42`、`n_jobs=-1`。
 - **防資料洩漏**：訓練特徵排除 `JID`、`Year`、`Injury`、原始目標欄、原始金額欄與 `Verdict_Total`；預測目標為 `Mental_Damage_log`，輸出時以 `np.expm1` 還原。
-- **模型 artifact**：`models/rf_model.pkl` 是 `joblib` 檔，內容為 `{"model": rf, "features": X.columns.tolist()}`；目前保存 **36** 個模型輸入特徵。
+- **模型 artifact**：`models/rf_model.pkl` 是 `joblib` 檔，內容為 `{"model": rf, "features": X.columns.tolist()}`；目前保存 **69** 個模型輸入特徵。
 
 ### 4.3 基準模型 (Null Model)
 - **策略**：無論案件特徵為何，一律「盲猜」訓練集的精神慰撫金平均值。
@@ -332,18 +332,18 @@ python3 code/04_model_training.py
 
 ### 5.2 顯著進步
 - **Null Model MAE**：393,888 元
-- **固定參數 Random Forest MAE**：250,200 元；R-squared：0.4462
-- **GridSearchCV 交叉驗證 MAE**：261,543 元
-- **調參後 Random Forest MAE**：250,976 元
-- **進步幅度**：較盲猜基準提升 **36.3%**；相較固定參數 RF 的 MAE 增加 **776 元**
-- **R-squared**：**0.4475**（以 log 目標計算）
+- **固定參數 Random Forest MAE**：249,295 元；R-squared：0.4468
+- **GridSearchCV 交叉驗證 MAE**：260,658 元
+- **調參後 Random Forest MAE**：244,958 元
+- **進步幅度**：較盲猜基準提升 **37.8%**；相較固定參數 RF 的 MAE 降低 **4,337 元**
+- **R-squared**：**0.4478**（以 log 目標計算）
 
 ### 5.3 特徵重要性（Top 5）
-1. `Injury_Level`（傷亡嚴重度）— 31.8%
-2. `Medical_Fee_log`（醫療費用對數）— 22.9%
-3. `Care_Fee_log`（看護費用對數）— 20.8%
-4. `Work_Loss_log`（工作損失對數）— 13.5%
-5. `Fault_Ratio`（與有過失比例）— 1.8%
+1. `Injury_Level`（傷亡嚴重度）— 35.15%
+2. `Care_Fee_log`（看護費用對數）— 21.39%
+3. `Medical_Fee_log`（醫療費用對數）— 21.02%
+4. `Work_Loss_log`（工作損失對數）— 13.02%
+5. `Court_CYEV`（法院代碼）— 1.72%
 
 > **洞察**：傷亡嚴重程度、醫療支出、看護需求與工作損失越高，模型越傾向預測較高的精神慰撫金；與有過失比例也提供部分責任分配資訊。
 

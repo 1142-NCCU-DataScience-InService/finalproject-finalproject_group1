@@ -2683,6 +2683,46 @@ def extract_features(rec: dict) -> Optional[Dict[str, object]]:
 
 
 # ─────────────────────────────────────────────
+# v20260607: keep Court output compatible with the old 02_build_dataset.py
+# - Old version outputs Court as the first token of JID, e.g. CDEV, TYEV, PCEV.
+# - Keeping this format prevents 03_exploratory_analysis.py from generating
+#   different one-hot columns such as Court_臺灣新北地方法院.
+# - Other extraction logic remains unchanged.
+# ─────────────────────────────────────────────
+def detect_court(rec: dict) -> str:
+    jid = str(rec.get("JID", "") or "").strip()
+    if jid:
+        return jid.split(",", 1)[0].strip()
+    return ""
+
+
+
+
+# ─────────────────────────────────────────────
+# v20260607b: final safety net for Court output
+# Even if an earlier extraction step put a Chinese court name into 「管轄法院」,
+# the English output row used by CSV will force Court = JID first token.
+# This prevents 03_exploratory_analysis.py from creating Court_臺灣xxx法院 columns.
+# ─────────────────────────────────────────────
+def normalize_court_code_from_row(row: Dict[str, object]) -> str:
+    jid = str(row.get("JID", "") or "").strip()
+    if jid and "," in jid:
+        return jid.split(",", 1)[0].strip()
+    if jid:
+        return jid.strip()
+    court = str(row.get("管轄法院", "") or row.get("Court", "") or "").strip()
+    return court
+
+
+def to_english_output_row(row: Dict[str, object]) -> Dict[str, object]:
+    """Convert internal Chinese fields to English output fields, and force Court to old code format."""
+    out = {english: row.get(chinese.split("；", 1)[0], "") for english, chinese in OUTPUT_FIELD_SPECS}
+    if "Court" in OUTPUT_FIELDNAMES:
+        out["Court"] = normalize_court_code_from_row(row)
+    return out
+
+
+# ─────────────────────────────────────────────
 # 專案版主程式：輸出入方式與原 02_build_dataset.py 一致
 # ─────────────────────────────────────────────
 def iter_input_groups(source: Path) -> Iterable[Tuple[str, List[Path]]]:
